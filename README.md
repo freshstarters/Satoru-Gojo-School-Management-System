@@ -1,8 +1,12 @@
 # Gojo School
 
-`UI-template/template1.html` is the interactive workspace for Gojo Academy in Sinkor, Monrovia. A headteacher opens the school day: attendance, uncovered bell slots, admissions still open, USD bills with a balance, and parent matters. The campus runs from early childhood (Nursery, ABC, K1, K2) through Grade 12. The year is Period 1 through Period 6. The bell is 1st Period through 8th Period. Fees are in USD.
+`UI-template/template1.html` is the interactive workspace for Gojo Institute in Sinkor and Paynesville, Monrovia. A headteacher opens the school day: attendance, uncovered bell slots, admissions still open, LRD bills with an optional USD equivalent, and parent matters. The campus runs from early childhood (Nursery, ABC, K1, K2) through Grade 12. The year is Period 1 through Period 6. The bell is 1st Period through 8th Period. Fees are in LRD.
 
-Open that file in a browser to click through the sample. The Vite app in `src/` is still the starter shell.
+Open that file in a browser to click through the sample. The Vite app in `src/` is the school shell. Start it on port 5174 so it matches the API cookie and CSRF setup:
+
+```bash
+npm run dev -- --port 5174
+```
 
 # React + TypeScript + Vite
 
