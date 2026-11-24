@@ -160,7 +160,7 @@ export const PANES: Pane[] = [
     section: 'Operations',
     count: null,
     money: null,
-    subtitle: 'Privacy notice and interface primitives.',
+    subtitle: 'School profile, calendar, grading, and the LRD exchange rate.',
   },
 ]
 
