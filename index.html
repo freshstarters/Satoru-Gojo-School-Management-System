@@ -4,7 +4,28 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gojo-school-mgt-sys</title>
+    <title>Gojo Institute — School Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      ;(function () {
+        var theme = localStorage.getItem('gojo.theme') || 'light'
+        var accent = localStorage.getItem('gojo.accent') || 'blue'
+        var font = localStorage.getItem('gojo.font') || 'inter'
+        if (theme !== 'light' && theme !== 'dark') theme = 'light'
+        if (['blue', 'slate', 'emerald', 'indigo'].indexOf(accent) === -1) accent = 'blue'
+        if (['inter', 'jakarta', 'system'].indexOf(font) === -1) font = 'inter'
+        var root = document.documentElement
+        root.setAttribute('data-theme', theme)
+        root.setAttribute('data-accent', accent)
+        root.setAttribute('data-font', font)
+        root.classList.toggle('dark', theme === 'dark')
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
