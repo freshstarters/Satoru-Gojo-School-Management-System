@@ -4,6 +4,7 @@ import { useAuth } from '../auth/useAuth.ts'
 import { paneById } from '../navigation.ts'
 import { Sidebar } from './Sidebar.tsx'
 import { Topbar } from './Topbar.tsx'
+import { SchoolProfileProvider } from '../school/SchoolProfile.tsx'
 
 export function AppShell() {
   const { user } = useAuth()
@@ -15,7 +16,8 @@ export function AppShell() {
   if (!user) return null
 
   return (
-    <div className="relative flex h-full overflow-hidden">
+    <SchoolProfileProvider>
+      <div className="relative flex h-full overflow-hidden">
       <div className="hidden w-[5.25rem] shrink-0 lg:block" />
       {mobileOpen ? (
         <button type="button" className="fixed inset-0 z-40 bg-slate-900/50 lg:hidden" aria-label="Close menu" onClick={() => setMobileOpen(false)} />
@@ -38,5 +40,6 @@ export function AppShell() {
         </main>
       </div>
     </div>
+    </SchoolProfileProvider>
   )
 }

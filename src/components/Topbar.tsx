@@ -6,7 +6,7 @@ import { setAccent, setFont, setTheme, setUsdReference, usePreferences, type Acc
 import { canSeeAi, canSeeAudit, dashboardTitle, initials, roleLabel, type Pane } from '../navigation.ts'
 import { formatMonroviaDateTime } from '../utils/datetime.ts'
 import { fetchSessions, refreshSession, revokeSession, type BrowserSession } from '../service/apiClient.ts'
-import { sampleWorkspace } from '../fixtures/sampleWorkspace.ts'
+import { useSchoolProfile } from '../school/school-profile.ts'
 import { Button } from './Button.tsx'
 import { ConfirmDialog } from './ConfirmDialog.tsx'
 import { Drawer } from './Drawer.tsx'
@@ -28,6 +28,7 @@ export function Topbar({
 }) {
   const { user, logout } = useAuth()
   const preferences = usePreferences()
+  const profile = useSchoolProfile()
   const navigate = useNavigate()
   const searchRef = useRef<HTMLInputElement>(null)
   const [search, setSearch] = useState('')
@@ -105,8 +106,8 @@ export function Topbar({
       <div className="flex items-center space-x-3">
         <MenuButton onClick={onMenu} />
         <div className="flex items-center space-x-2 text-sm">
-          <span className="hidden text-sub sm:inline">{sampleWorkspace.schoolName}</span>
-          <span className="hidden text-sub sm:inline">/</span>
+          {profile.schoolName ? <span className="hidden text-sub sm:inline">{profile.schoolName}</span> : null}
+          {profile.schoolName ? <span className="hidden text-sub sm:inline">/</span> : null}
           <span className="font-semibold text-main">
             {pane?.id === 'dashboard' ? dashboardTitle(role) : pane?.breadcrumb ?? 'Campus'}
           </span>
