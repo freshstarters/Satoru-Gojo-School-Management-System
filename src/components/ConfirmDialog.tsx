@@ -10,6 +10,7 @@ export function ConfirmDialog({
   onConfirm,
   onClose,
   busy = false,
+  destructive = false,
 }: {
   open: boolean
   title: string
@@ -18,6 +19,7 @@ export function ConfirmDialog({
   onConfirm: () => void
   onClose: () => void
   busy?: boolean
+  destructive?: boolean
 }) {
   return (
     <Modal
@@ -29,7 +31,12 @@ export function ConfirmDialog({
           <Button variant="secondary" className="px-3 py-1.5 text-xs" onClick={onClose} disabled={busy}>
             Cancel
           </Button>
-          <Button className="px-3 py-1.5 text-xs" onClick={onConfirm} disabled={busy}>
+          <Button
+            variant={destructive ? 'danger' : 'primary'}
+            className="px-3 py-1.5 text-xs"
+            onClick={onConfirm}
+            disabled={busy}
+          >
             {confirmLabel}
           </Button>
         </>

@@ -9,11 +9,13 @@ export function DatePicker({
   onChange,
   ariaLabel,
   className = '',
+  disabled = false,
 }: {
   value: string
   onChange: (value: string) => void
   ariaLabel: string
   className?: string
+  disabled?: boolean
 }) {
   const panelId = useId()
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -64,11 +66,13 @@ export function DatePicker({
       <button
         ref={triggerRef}
         type="button"
+        disabled={disabled}
         className={`custom-select-trigger custom-date-trigger crm-input w-full py-1.5 ${value ? 'has-clear' : ''} ${open ? 'is-open' : ''}`}
         aria-label={ariaLabel}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => {
+          if (disabled) return
           const rect = triggerRef.current?.getBoundingClientRect()
           if (!rect) return
           setBox({
@@ -82,7 +86,7 @@ export function DatePicker({
       >
         <span className={value ? 'text-main' : 'text-sub'}>{value ? formatIsoDate(value) : 'Select a date'}</span>
       </button>
-      {value ? (
+      {value && !disabled ? (
         <button
           type="button"
           className="custom-date-clear"
