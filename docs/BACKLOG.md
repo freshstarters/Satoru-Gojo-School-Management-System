@@ -67,7 +67,8 @@
 - **Deliverables:**
   - `RoleMembership`, `InviteToken` (72h expiry, single-use SHA-256 hashed token), `PasswordResetToken`, and `IdempotencyRecord` models in `core`.
   - Endpoints: `POST .../auth/invites/`, `POST .../auth/invites/accept/`, `POST .../auth/password-reset/request/`, `POST .../auth/password-reset/confirm/`.
-  - Reusable DRF permission classes (`HasSchoolRole`, `IsCampusScoped`, `IsPlatformSuperAdmin`) enforcing Section 2.2 of `PRD.md`.
+  - Reusable DRF permission classes (`HasSchoolRole`, `IsCampusScoped`, `IsPlatformSuperAdmin`) enforcing Section 2.2 of `PRD.md`. Division and subject write endpoints use `HasSchoolRole`.
+  - A signed-in user can review the sessions listed for this browser and revoke one session without resetting the password.
   - `core/helpers/idempotency.py`: Decorator/mixin honoring `Idempotency-Key` header on mutating endpoints and `If-Unmatched-Since` optimistic concurrency check returning `409 Conflict` with `server_record`.
   - Seed management command `seed_gojo_demo` creating Gojo Institute's initial Principal (`Dr. Samuel Kollie`), Registrar (`Beatrice Toe`), Bursar (`Joseph Freeman`), and Teacher (`Grace Johnson`) accounts for local dev.
 - **Reviewer Checks:**
@@ -85,7 +86,8 @@
   - Configure Tailwind CSS (`darkMode: 'class'`) and import all exact CSS custom properties (`--bg-canvas`, `--bg-surface`, `--bg-subtle`, `--bg-modal`, `--bg-inset`, `--brand-primary`, badge tokens, `.floating-sidebar`, `.floating-topbar`, `.crm-card`, `.btn-primary`, `.btn-secondary`, `.subtab-bar`, `.tab-glide`, `.num-tabular`) into `src/index.css`.
   - Build reusable components in `src/components/`: `Button`, `Card`, `Modal`, `Drawer`, `Subtabs`, `Select` (custom dropdown portal), `DatePicker`, `DateTimePicker`, `Badge`, `Toast`, `ConfirmDialog`, `DataTable`, `EmptyState`, `ErrorState`, `Tooltip`.
   - Build `AppShell` with collapsible `.floating-sidebar` (all 13 navigation items filtered by authenticated role + SMS Wallet pill), `.floating-topbar` (Global Search trigger, `LRD + USD` toggle, Theme/Accent/Font popover, AI Assist button, Audit Log button, User menu), and mobile drawer.
-  - Build `src/service/apiClient.ts` targeting `/api/demo/v1/` with automatic access-token refresh, `Idempotency-Key` header support, and typed error parsing.
+  - Build `src/service/apiClient.ts` targeting `/api/demo/v1/` with automatic access-token refresh, `Idempotency-Key` header support, and typed error parsing. The client is same-site with the API, sends credentials, copies the CSRF token from `GET /auth/config/` into `X-CSRFToken`, and keeps the access token in memory.
+  - Each workspace pane has its own address, and a refresh reopens that pane. Timestamps and dates display in `Africa/Monrovia`. The user menu lists this browser's sessions and can revoke one.
   - Build Login, Google Sign-In (conditionally rendered from `/auth/config/`), Invite Activation, Password Reset, and Privacy Notice screens.
   - Update `frontend-composition` rules across both repos (`.cursor/rules/` and `.agent/rules/`) so sample references match `UI-template/template1.html` (`Gojo Institute`, Sinkor & Paynesville, `LRD + USD`, 13 panes).
 - **Reviewer Checks:**
@@ -135,7 +137,7 @@
   - `core/integrations/storage.py`: S3/R2 storage adapter (fails closed in prod if unconfigured; local media allowed only when `DEBUG=True`).
   - `demo/models/people.py`: `Student` (auto `student_code` e.g. `GI-2026-0001`, campus, current_classroom, status [`Active`, `Honor Roll`, `At Risk`, `WAEC Candidate`, `Withdrawn`, `Graduated`], photo, DOB, gender, catchment_zone), `StudentWelfare` (allergies, medical_notes, blood_group, emergency_contact), `AuthorizedPickup` (name, relationship, `+231` phone, id_note), `ConductNote` (type [`Merit`, `Incident`, `Homeroom Note`], severity, description, author).
   - Endpoints: `/api/demo/v1/students/`, `/students/<id>/welfare/`, `/students/<id>/pickups/`, `/students/<id>/conduct/`.
-  - Wire `StudentsScreen` (Division & Status filters, search, summary stat cards, paginated table, `+ Enroll Student` modal) and `StudentInspectorDrawer` with `Profile & Academics`, `Welfare & Pickup`, and `Conduct & Notes` subtabs.
+  - Wire `StudentsScreen` (Division & Status filters, search, summary stat cards, paginated table, `+ Enroll Student` modal) and `StudentInspectorDrawer` with `Profile & Academics`, `Welfare & Pickup`, and `Conduct & Notes` subtabs. The open inspector has its own address, so a refresh or a shared link opens that same student.
 - **Reviewer Checks:**
   - Enrolling a student generates a unique `GI-YYYY-NNNN` code and displays immediately in the table without page reload.
   - Adding an authorized pickup with a Liberian phone normalizes it to `+231`.
@@ -215,10 +217,11 @@
 - **Deliverables:**
   - `demo/models/waec.py`: `WaecCandidate` (student, academic_year, exam_level [`LJHSCE_G9`, `WASSCE_G12`], candidate_number, registered_subjects JSON, lab_practical_complete, mock_avg, exam_fee_status [`Paid`, `Unpaid`, `Partial`], readiness_status [`Ready`, `Fee Pending`, `At Risk`], notes).
   - Endpoints: `/api/demo/v1/waec/candidates/` (list, filter by campus/exam level/readiness, create/update, bulk sync from Grade 9 & Grade 12 rosters).
-  - Wire `WAEC / WASSCE Tracker` subtab in `GradesScreen` with readiness KPIs, candidate table, candidate detail modal, and direct deep-link from Principal Dashboard WAEC compliance alerts.
+  - Wire `WAEC / WASSCE Tracker` subtab in `GradesScreen` with readiness KPIs, candidate table, candidate detail modal, and direct deep-link from Principal Dashboard WAEC compliance alerts. The bursar's Grades & WAEC item opens on this subtab. The gradebook subtab is hidden for the bursar, and exam-fee status remains editable there.
 - **Reviewer Checks:**
   - Clicking `Inspect WAEC` on the Principal Dashboard opens `Grades -> WAEC / WASSCE Tracker` filtered to candidates needing attention.
   - Updating a candidate's WAEC fee status or mock exam average automatically recalculates `readiness_status`.
+  - A bursar can update exam-fee status on the tracker and cannot edit gradebook scores.
 
 ### S4.3 — Printable PDF Report Cards, Bulk Class Export & Senior High Transcripts (`demo`)
 - **Goal:** Build server-side branded PDF generation (WeasyPrint/ReportLab) for Liberian Period/Semester/Annual Report Cards, Senior High Cumulative Transcripts (Grades 10–12), Class Grade Sheets (PDF/CSV), and Celery-backed bulk class ZIP generation stored on S3/R2.
@@ -317,8 +320,10 @@
   - Celery task `dispatch_announcement_notifications` respecting guardian `sms_consent=True` and performing atomic SMS Wallet balance checks & deductions.
   - Endpoints: `/api/demo/v1/announcements/`, `POST .../publish/`, `/api/demo/v1/sms-wallet/`, `POST .../topup/`, `/api/demo/v1/notifications/logs/`.
   - Wire `AnnouncementsScreen` (list, inspector drawer, `+ New Announcement` modal, publish confirmation modal, SMS Wallet balance & Top-Up modal) and live sidebar SMS balance pill.
+  - A phone password reset keeps emailing the account and also sends the link by SMS when the gateway is configured. A missing gateway does not stop that email.
 - **Reviewer Checks:**
   - Publishing an SMS announcement with missing SMS gateway keys fails closed (`NotificationLog` records `UNCONFIGURED`, wallet is not falsely drained).
+  - A phone password reset with a configured gateway sends both the account email and the SMS. With no gateway, the email still goes out and no SMS is recorded as sent.
   - Publishing an SMS announcement with insufficient SMS Wallet balance returns `400` before dispatching.
   - Guardians with `sms_consent=False` are automatically excluded from SMS dispatch.
 
@@ -346,7 +351,7 @@
 - **PRD Acceptance:** AC-62
 - **SCOPE:** Milestone M6
 - **Deliverables:**
-  - `core/service/audit_service.py`: Centralized `write_audit_event(...)` helper verified across Auth, Grades, Grade Locks, Finance Payments/Voids, Exam Clearance Overrides, Admissions Conversions, Attendance, Settings, and AI Assist.
+  - `core/service/audit_service.py`: Centralized `write_audit_event(...)` helper verified across Auth, Grades, Grade Locks, Finance Payments/Voids, Exam Clearance Overrides, Admissions Conversions, Attendance, Settings, and AI Assist. Failed sign-ins and tenant-mismatch events go through `write_audit_event`.
   - `GET /api/demo/v1/audit-logs/` (paginated, filterable by `actor`, `module`, `entity_type`, `date_from`, `date_to`, strictly role-scoped: Principal sees all, Registrar academic, Bursar finance).
   - Wire `AuditDrawer` (`36rem` sheet) and live dashboard audit headline ticker.
 - **Reviewer Checks:**
