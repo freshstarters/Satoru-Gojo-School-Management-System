@@ -8,6 +8,21 @@ Open that file in a browser to click through the sample. The Vite app in `src/` 
 npm run dev -- --port 5174
 ```
 
+The API is the Django app in `lib_school_management_system`. Run that server on port 7000. The Vite dev server proxies `/api` to `http://127.0.0.1:7000`.
+
+```bash
+python manage.py runserver 7000
+```
+
+`python manage.py seed_gojo_demo` creates the staff logins below when `DEBUG` is true. They share the password in `SEED_GOJO_PASSWORD` (`local-dev-only` in the local `.env`).
+
+| Email | Name | Role |
+|---|---|---|
+| `samuel.kollie@gojo.test` | Dr. Samuel Kollie | Principal |
+| `beatrice.toe@gojo.test` | Beatrice Toe | Registrar |
+| `joseph.freeman@gojo.test` | Joseph Freeman | Bursar |
+| `grace.johnson@gojo.test` | Grace Johnson | Teacher |
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

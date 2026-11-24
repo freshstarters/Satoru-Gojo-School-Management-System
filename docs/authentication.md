@@ -83,7 +83,7 @@ Request, confirm, and invite accept are limited to 5 requests per minute per IP 
 - `joseph.freeman@gojo.test`, Joseph Freeman, bursar
 - `grace.johnson@gojo.test`, Grace Johnson, teacher
 
-Running it again does not duplicate rows, and it does not change an existing password or display name. The password stays in `.env`.
+Running it again does not duplicate rows, and it does not change an existing password or display name. The same command also creates the campus student and teacher logins described in School settings. The password stays in `.env`.
 
 ## Browser client
 
