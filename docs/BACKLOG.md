@@ -151,7 +151,7 @@
 - **Deliverables:**
   - `demo/models/people.py`: `StaffProfile` (user link, staff_code, role, campus, qualifications, phone, email, employment_status) and `GuardianProfile` (user link, full_name, relationship, `+231` phone, whatsapp_phone, email, residential_zone, occupation, `sms_consent`), `StudentGuardianLink` (student, guardian, is_primary, is_financial_responsible).
   - Endpoints: `/api/demo/v1/teachers/`, `/api/demo/v1/parents/`, plus `POST .../send-invite/` action calling `core` invite service.
-  - Wire `TeachersScreen` + `TeacherInspectorDrawer` + `NewStaffModal` and `ParentsScreen` + `ParentInspectorDrawer` + `NewParentModal`.
+  - Wire `TeachersScreen` + `TeacherInspectorDrawer` + `NewStaffModal` and `ParentsScreen` + `ParentInspectorDrawer` + `NewParentModal`. The open teacher or parent inspector has its own address, and the selected inspector subtab is part of that address so a refresh reopens the same person and subtab.
 - **Reviewer Checks:**
   - Linking one guardian to two siblings displays both children and aggregated balance summary in the Parent Inspector.
   - Soft-deactivating a teacher preserves their historical timetable/grade attribution.

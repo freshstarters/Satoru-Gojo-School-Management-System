@@ -36,7 +36,7 @@ If `GOOGLE_OAUTH_CLIENT_ID` or `GOOGLE_OAUTH_CLIENT_SECRET` is blank, the endpoi
 
 ## Privacy notice
 
-`GET /auth/config/` returns `hosting_region`, `data_controller_name`, and a `privacy_notice` object. When either setting is blank, `privacy_notice.configured` is false and `warning` says the notice is not configured. The notice also states that guardians can opt in or out of SMS.
+`GET /auth/config/` returns `hosting_region`, `data_controller_name`, and a `privacy_notice` object. When either setting is blank, `privacy_notice.configured` is false and `warning` says the notice is not configured. The notice also states that guardians can opt in or out of SMS. On `/api/demo/v1/auth/config/`, the body also includes `school_name` for the sign-in card and shell brand.
 
 ## Roles
 
