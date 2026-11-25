@@ -7,7 +7,10 @@ import { dashboardTitle, firstPane, paneById, panesForRole } from '../navigation
 import { useSchoolProfile } from '../school/school-profile.ts'
 import { formatLrd, formatUsdEquivalent } from '../utils/money.ts'
 import { ClassesScreen } from './ClassesScreen.tsx'
+import { ParentsScreen } from './ParentsScreen.tsx'
 import { SettingsScreen } from './SettingsScreen.tsx'
+import { StudentsScreen } from './StudentsScreen.tsx'
+import { TeachersScreen } from './TeachersScreen.tsx'
 
 export function HomeRedirect() {
   const { user } = useAuth()
@@ -17,11 +20,18 @@ export function HomeRedirect() {
 }
 
 export function WorkspaceScreen() {
-  const { paneId } = useParams()
+  const { paneId, studentId, teacherId, parentId } = useParams()
   const { user } = useAuth()
   const preferences = usePreferences()
   const profile = useSchoolProfile()
-  const pane = paneId ? paneById(paneId) : null
+  const resolvedPaneId = studentId
+    ? 'students'
+    : teacherId
+      ? 'teachers'
+      : parentId
+        ? 'parents'
+        : paneId
+  const pane = resolvedPaneId ? paneById(resolvedPaneId) : null
   const allowed = panesForRole(user?.role ?? '')
   if (!pane || !allowed.some((item) => item.id === pane.id)) {
     const next = allowed[0]
@@ -29,7 +39,11 @@ export function WorkspaceScreen() {
     return <Navigate to={`/${next.id}`} replace />
   }
 
-  const ownsHeader = pane.id === 'classes'
+  const ownsHeader =
+    pane.id === 'classes' ||
+    pane.id === 'students' ||
+    pane.id === 'teachers' ||
+    pane.id === 'parents'
 
   return (
     <section className={`space-y-5 ${pane.id === 'settings' ? 'max-w-4xl' : 'w-full'}`}>
@@ -53,6 +67,12 @@ export function WorkspaceScreen() {
         <SettingsScreen />
       ) : pane.id === 'classes' ? (
         <ClassesScreen />
+      ) : pane.id === 'students' ? (
+        <StudentsScreen />
+      ) : pane.id === 'teachers' ? (
+        <TeachersScreen />
+      ) : pane.id === 'parents' ? (
+        <ParentsScreen />
       ) : (
         <p className="text-xs text-sub">This workspace is not available yet.</p>
       )}

@@ -24,6 +24,9 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route element={<AppShell />}>
               <Route index element={<HomeRedirect />} />
+              <Route path="students/:studentId" element={<WorkspaceScreen />} />
+              <Route path="teachers/:teacherId" element={<WorkspaceScreen />} />
+              <Route path="parents/:parentId" element={<WorkspaceScreen />} />
               <Route path=":paneId" element={<WorkspaceScreen />} />
             </Route>
           </Route>

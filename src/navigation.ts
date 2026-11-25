@@ -48,8 +48,8 @@ export const PANES: Pane[] = [
     tooltip: 'Students Directory',
     breadcrumb: 'Students Directory',
     section: 'Campus Core',
-    count: counts.students,
-    money: amounts.students,
+    count: null,
+    money: null,
     subtitle: 'Student records for Sinkor and Paynesville.',
   },
   {
@@ -78,7 +78,7 @@ export const PANES: Pane[] = [
     tooltip: 'Classes & Timetable',
     breadcrumb: 'Classes & Timetable',
     section: 'Academics',
-    count: counts.classes,
+    count: null,
     money: null,
     subtitle: 'Classes, subjects, and the weekly bell.',
   },
@@ -196,10 +196,14 @@ export function dashboardTitle(role: string) {
   }
 }
 
-export function panesForRole(role: string) {
+export function panesForRole(role: string, liveCounts: Partial<Record<PaneId, number>> = {}) {
   if (!KNOWN_ROLES.has(role)) return []
   const denied = new Set(DENIED[role] ?? [])
-  return PANES.filter((pane) => !denied.has(pane.id))
+  return PANES.filter((pane) => !denied.has(pane.id)).map((pane) => {
+    const live = liveCounts[pane.id]
+    if (live == null) return pane
+    return { ...pane, count: live }
+  })
 }
 
 export function firstPane(role: string) {

@@ -1,8 +1,11 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink } from 'react-router'
 import type { PublicUser } from '../service/apiClient.ts'
 import { sampleWorkspace } from '../fixtures/sampleWorkspace.ts'
 import { canTopUp, dashboardTitle, initials, panesForRole, roleLabel, type Pane } from '../navigation.ts'
+import { useSchoolProfile } from '../school/school-profile.ts'
+import { fetchClassrooms } from '../service/classes.ts'
+import { fetchStudents } from '../service/students.ts'
 import { formatLrd } from '../utils/money.ts'
 import { Button } from './Button.tsx'
 
@@ -17,9 +20,32 @@ export function Sidebar({
   onNavigate: () => void
   onTopUp: () => void
 }) {
-  const panes = panesForRole(user.role)
+  const profile = useSchoolProfile()
+  const [liveCounts, setLiveCounts] = useState<{ students?: number; classes?: number }>({})
+  const panes = panesForRole(user.role, {
+    students: liveCounts.students,
+    classes: liveCounts.classes,
+  })
   const sections = ['Campus Core', 'Academics', 'People & Welfare', 'Operations'] as const
   const school = sampleWorkspace
+  const schoolName = profile.schoolName.trim() || school.schoolName
+
+  useEffect(() => {
+    let cancelled = false
+    void Promise.all([
+      fetchStudents({ page: 1, page_size: 1 }).then((body) => body.summary.total),
+      fetchClassrooms().then((rows) => rows.length),
+    ])
+      .then(([students, classes]) => {
+        if (!cancelled) setLiveCounts({ students, classes })
+      })
+      .catch(() => {
+        if (!cancelled) setLiveCounts({})
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <aside
@@ -34,7 +60,7 @@ export function Sidebar({
               G
             </div>
             <div className="sb-label min-w-0">
-              <div className="truncate text-sm font-semibold text-main">{school.schoolName}</div>
+              <div className="truncate text-sm font-semibold text-main">{schoolName}</div>
               <div className="truncate text-xs text-sub">{school.tagline}</div>
             </div>
           </div>

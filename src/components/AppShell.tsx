@@ -8,8 +8,8 @@ import { SchoolProfileProvider } from '../school/SchoolProfile.tsx'
 
 export function AppShell() {
   const { user } = useAuth()
-  const { paneId } = useParams()
-  const pane = paneId ? paneById(paneId) : null
+  const { paneId, studentId } = useParams()
+  const pane = paneById(studentId ? 'students' : paneId ?? '')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [topUpOpen, setTopUpOpen] = useState(false)
 
