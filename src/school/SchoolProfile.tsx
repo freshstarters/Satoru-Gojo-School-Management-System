@@ -7,14 +7,10 @@ const READERS = new Set(['principal', 'registrar', 'bursar'])
 
 export function SchoolProfileProvider({ children }: { children: ReactNode }) {
   const { user, config } = useAuth()
-  const [schoolName, setSchoolName] = useState(config?.school_name?.trim() ?? '')
+  const [settingsName, setSettingsName] = useState<string | null>(null)
   const [lrdPerUsd, setRate] = useState<number | null>(null)
   const role = user?.role ?? ''
-
-  useEffect(() => {
-    const fromConfig = config?.school_name?.trim()
-    if (fromConfig) setSchoolName(fromConfig)
-  }, [config?.school_name])
+  const schoolName = settingsName ?? config?.school_name?.trim() ?? ''
 
   useEffect(() => {
     if (!READERS.has(role)) return
@@ -23,7 +19,7 @@ export function SchoolProfileProvider({ children }: { children: ReactNode }) {
       .then((settings) => {
         if (cancelled) return
         const rate = Number(settings.lrd_per_usd)
-        setSchoolName(settings.school_name)
+        setSettingsName(settings.school_name)
         setRate(Number.isFinite(rate) && rate > 0 ? rate : null)
       })
       .catch(() => {
@@ -36,7 +32,7 @@ export function SchoolProfileProvider({ children }: { children: ReactNode }) {
   }, [role])
 
   const value = useMemo(
-    () => ({ schoolName, lrdPerUsd, setSchoolName, setRate }),
+    () => ({ schoolName, lrdPerUsd, setSchoolName: setSettingsName, setRate }),
     [schoolName, lrdPerUsd],
   )
   return <SchoolProfileContext.Provider value={value}>{children}</SchoolProfileContext.Provider>

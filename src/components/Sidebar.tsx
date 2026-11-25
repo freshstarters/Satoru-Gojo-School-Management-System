@@ -5,7 +5,9 @@ import { sampleWorkspace } from '../fixtures/sampleWorkspace.ts'
 import { canTopUp, dashboardTitle, initials, panesForRole, roleLabel, type Pane } from '../navigation.ts'
 import { useSchoolProfile } from '../school/school-profile.ts'
 import { fetchClassrooms } from '../service/classes.ts'
+import { fetchParents } from '../service/parents.ts'
 import { fetchStudents } from '../service/students.ts'
+import { fetchTeachers } from '../service/teachers.ts'
 import { formatLrd } from '../utils/money.ts'
 import { Button } from './Button.tsx'
 
@@ -21,10 +23,17 @@ export function Sidebar({
   onTopUp: () => void
 }) {
   const profile = useSchoolProfile()
-  const [liveCounts, setLiveCounts] = useState<{ students?: number; classes?: number }>({})
+  const [liveCounts, setLiveCounts] = useState<{
+    students?: number
+    classes?: number
+    teachers?: number
+    parents?: number
+  }>({})
   const panes = panesForRole(user.role, {
     students: liveCounts.students,
     classes: liveCounts.classes,
+    teachers: liveCounts.teachers,
+    parents: liveCounts.parents,
   })
   const sections = ['Campus Core', 'Academics', 'People & Welfare', 'Operations'] as const
   const school = sampleWorkspace
@@ -33,15 +42,21 @@ export function Sidebar({
   useEffect(() => {
     let cancelled = false
     void Promise.all([
-      fetchStudents({ page: 1, page_size: 1 }).then((body) => body.summary.total),
-      fetchClassrooms().then((rows) => rows.length),
-    ])
-      .then(([students, classes]) => {
-        if (!cancelled) setLiveCounts({ students, classes })
-      })
-      .catch(() => {
-        if (!cancelled) setLiveCounts({})
-      })
+      fetchStudents({ page: 1, page_size: 1 })
+        .then((body) => body.summary.total)
+        .catch(() => undefined),
+      fetchClassrooms()
+        .then((rows) => rows.length)
+        .catch(() => undefined),
+      fetchTeachers({ page: 1, page_size: 1 })
+        .then((body) => body.count)
+        .catch(() => undefined),
+      fetchParents({ page: 1, page_size: 1 })
+        .then((body) => body.count)
+        .catch(() => undefined),
+    ]).then(([students, classes, teachers, parents]) => {
+      if (!cancelled) setLiveCounts({ students, classes, teachers, parents })
+    })
     return () => {
       cancelled = true
     }
