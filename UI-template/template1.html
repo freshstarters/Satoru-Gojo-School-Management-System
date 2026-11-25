@@ -1737,10 +1737,19 @@
               <span id="roleLensBadge" class="text-[11px] font-medium" style="color: var(--brand-text);">Full Campus</span>
             </div>
             <select id="roleSelector" onchange="handleRoleChange(this.value)" class="crm-input w-full px-2.5 py-1.5 text-xs font-medium">
-              <option value="Principal">Dr. Samuel Kollie (Principal)</option>
-              <option value="Registrar">Beatrice Toe (Registrar)</option>
-              <option value="Bursar">Joseph Freeman (Bursar)</option>
-              <option value="Teacher">Grace Johnson (Teacher · G6A)</option>
+              <optgroup label="Staff Administration">
+                <option value="Principal">Dr. Samuel Kollie (Principal)</option>
+                <option value="Registrar">Beatrice Toe (Registrar)</option>
+                <option value="Bursar">Joseph Freeman (Bursar)</option>
+                <option value="Teacher">Grace Johnson (Teacher · G6A)</option>
+              </optgroup>
+              <optgroup label="Portals &amp; Guardians">
+                <option value="Parent">Helena Kollie (Parent Portal)</option>
+                <option value="Student">Ezekiel Kollie (Student Portal)</option>
+              </optgroup>
+              <optgroup label="Public Onboarding">
+                <option value="Auth">Public Auth &amp; Onboarding</option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -1776,6 +1785,39 @@
 
         <!-- Right Controls -->
         <div class="flex items-center space-x-2">
+          
+          <!-- Network Status Pill (PWA Offline / Conflict Simulator) -->
+          <button id="networkStatusPill" onclick="toggleSyncOutboxDrawer()" class="btn-secondary px-2.5 py-1.5 text-xs flex items-center space-x-1.5" data-tooltip="Network &amp; PWA Offline Sync State">
+            <span id="networkStatusDot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span id="networkStatusLabel" class="hidden sm:inline font-medium text-main">Online · Synced</span>
+            <span id="networkOutboxCountBadge" class="badge badge-warn text-[10px] py-0 px-1.5 hidden num-tabular">0</span>
+          </button>
+
+          <!-- Unified View & Perspective Selector -->
+          <div class="relative hidden sm:inline-block">
+            <select id="topbarViewSelector" onchange="handleViewContextChange(this.value)" class="crm-input px-2.5 py-1.5 text-xs font-semibold text-main cursor-pointer" data-tooltip="Switch App Perspective &amp; Role">
+              <optgroup label="Staff Administration">
+                <option value="staff:Principal" selected>Principal · Dr. Samuel Kollie</option>
+                <option value="staff:Registrar">Registrar · Beatrice Toe</option>
+                <option value="staff:Bursar">Bursar · Joseph Freeman</option>
+                <option value="staff:Teacher">Teacher · Grace Johnson (G6A)</option>
+              </optgroup>
+              <optgroup label="Portals &amp; Guardians">
+                <option value="parent:Helena">Parent Portal · Helena Kollie</option>
+                <option value="student:Ezekiel">Student Portal · Ezekiel Kollie</option>
+              </optgroup>
+              <optgroup label="Public Experience">
+                <option value="auth:showcase">Public Auth · Sign In &amp; Invite</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- Prototype Reset Button -->
+          <button onclick="resetPrototypeData()" class="btn-secondary px-2.5 py-1.5 text-xs hidden lg:inline-flex items-center space-x-1" data-tooltip="Reset Sample Prototype Data">
+            <svg class="w-3.5 h-3.5 text-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+            <span class="text-sub">Reset</span>
+          </button>
+
           <button id="usdRefToggleBtn" onclick="toggleUsdReference()" class="btn-secondary px-2.5 py-1.5 text-xs hidden md:inline-flex items-center space-x-1.5" data-tooltip="Show optional USD reference alongside LRD">
             <span class="font-semibold text-main">LRD</span>
             <span id="usdRefStatusBadge" class="text-[10px] text-sub">+ USD</span>
@@ -2449,11 +2491,11 @@
             <div class="flex flex-wrap items-center gap-2">
               <input id="teacherSearch" type="search" oninput="renderTeachersAll()" placeholder="Search staff..." class="crm-input px-3 py-1.5 text-xs w-44" />
               <select id="teacherDeptFilter" onchange="renderTeachersAll()" class="crm-input px-3 py-1.5 text-xs font-medium">
-                <option value="ALL">All Departments</option>
-                <option value="Administration">Administration</option>
+                <option value="ALL">All Divisions</option>
                 <option value="Early Childhood">Early Childhood</option>
-                <option value="Mathematics &amp; Sciences">Mathematics &amp; Sciences</option>
-                <option value="Humanities &amp; Languages">Humanities &amp; Languages</option>
+                <option value="Elementary">Elementary</option>
+                <option value="Junior High">Junior High</option>
+                <option value="Senior High">Senior High</option>
               </select>
               <button onclick="openNewStaffModal()" class="btn-primary px-3 py-1.5 text-xs">+ Add Staff</button>
             </div>
@@ -2705,9 +2747,743 @@
             </div>
           </div>
         </section>
+
+        <!-- PANE 14: PARENT & GUARDIAN PORTAL -->
+        <section id="pane-portal-parent" class="hidden space-y-5 w-full">
+          <!-- Guardian Profile & Child Switcher Bar -->
+          <div class="crm-card p-5 space-y-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div class="flex items-center space-x-3.5">
+                <div class="w-11 h-11 rounded-full crm-subtle border crm-border flex items-center justify-center font-bold text-base text-main">HK</div>
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <h2 class="text-lg font-semibold text-main tracking-tight">Helena Kollie</h2>
+                    <span class="badge badge-info text-[11px]">Parent / Guardian</span>
+                  </div>
+                  <p class="text-xs text-sub mt-0.5">+231 77 012 3456 · Sinkor Old Road, Monrovia · Linked Children: 2</p>
+                </div>
+              </div>
+
+              <!-- Active Child Selector -->
+              <div class="flex items-center space-x-2 bg-slate-100/60 dark:bg-zinc-800/60 p-1.5 rounded-lg border crm-border">
+                <span class="text-xs font-medium text-sub pl-2">Viewing Student:</span>
+                <button type="button" id="btnChildEzekiel" onclick="switchParentChild('STU-101')" class="px-3 py-1.5 rounded-md text-xs font-semibold bg-white dark:bg-zinc-700 text-main shadow-sm border crm-border transition-all">
+                  Ezekiel Kollie (Grade 6A)
+                </button>
+                <button type="button" id="btnChildBlessing" onclick="switchParentChild('STU-105')" class="px-3 py-1.5 rounded-md text-xs font-medium text-sub hover:text-main transition-all">
+                  Blessing Kollie (Grade 3B)
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick KPI Cards for Active Child -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+              <div class="p-3 rounded-lg crm-subtle space-y-1">
+                <div class="text-[11px] font-medium text-sub">Term Attendance</div>
+                <div id="parentChildAttendanceRate" class="text-base font-semibold text-main num-tabular">96.4%</div>
+                <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">42 Present · 1 Tardy · 1 Excused</div>
+              </div>
+              <div class="p-3 rounded-lg crm-subtle space-y-1">
+                <div class="text-[11px] font-medium text-sub">Academic Standing</div>
+                <div id="parentChildAcademicRank" class="text-base font-semibold text-main">Honor Roll (88.6%)</div>
+                <div class="text-[10px] text-sub">Rank #4 of 32 in Grade 6A</div>
+              </div>
+              <div class="p-3 rounded-lg crm-subtle space-y-1">
+                <div class="text-[11px] font-medium text-sub">Tuition Balance</div>
+                <div id="parentChildFeeBalance" class="text-base font-semibold text-main num-tabular">LRD 18,500.00</div>
+                <div class="text-[10px] text-sub">Paid LRD 51,500 of LRD 70,000</div>
+              </div>
+              <div class="p-3 rounded-lg crm-subtle space-y-1">
+                <div class="text-[11px] font-medium text-sub">Semester Exam Permit</div>
+                <div id="parentChildExamBadge" class="flex items-center space-x-1.5 mt-0.5">
+                  <span class="badge badge-success text-[10px]">Permit Active</span>
+                </div>
+                <div class="text-[10px] text-sub">Pass ID: EXP-2026-6A04</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parent Subtabs Navigation -->
+          <div class="subtab-bar" id="parentSubtabsBar">
+            <button onclick="switchParentSubtab('overview')" class="subtab active" data-subtab="overview">Attendance &amp; Schedule</button>
+            <button onclick="switchParentSubtab('grades')" class="subtab" data-subtab="grades">Academic Grades &amp; Report Card</button>
+            <button onclick="switchParentSubtab('fees')" class="subtab" data-subtab="fees">Tuition &amp; Mobile Money</button>
+            <button onclick="switchParentSubtab('notices')" class="subtab" data-subtab="notices">Campus Notices &amp; Inquiries</button>
+          </div>
+
+          <!-- Subtab 1: Attendance & Schedule -->
+          <div id="parentSubtabOverview" class="space-y-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div class="lg:col-span-2 crm-card p-5 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b crm-border">
+                  <div>
+                    <h3 class="text-sm font-semibold text-main">Daily Attendance Log (October – November 2026)</h3>
+                    <p class="text-xs text-sub mt-0.5">Homeroom morning roll call by Grace Johnson.</p>
+                  </div>
+                  <span class="badge badge-success text-xs">Regular Attendee</span>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-xs text-left">
+                    <thead>
+                      <tr class="text-[11px] uppercase text-sub border-b crm-border">
+                        <th class="py-2.5 px-3">Date</th>
+                        <th class="py-2.5 px-3">Roll Call Status</th>
+                        <th class="py-2.5 px-3">Arrival Time</th>
+                        <th class="py-2.5 px-3">Remarks / Excuses</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y crm-border">
+                      <tr class="crm-hover"><td class="py-2.5 px-3 font-medium text-main">Tue, Nov 24, 2026</td><td class="py-2.5 px-3"><span class="badge badge-success">Present</span></td><td class="py-2.5 px-3 text-sub num-tabular">7:52 AM</td><td class="py-2.5 px-3 text-sub">On time for Morning Assembly</td></tr>
+                      <tr class="crm-hover"><td class="py-2.5 px-3 font-medium text-main">Mon, Nov 23, 2026</td><td class="py-2.5 px-3"><span class="badge badge-success">Present</span></td><td class="py-2.5 px-3 text-sub num-tabular">7:48 AM</td><td class="py-2.5 px-3 text-sub">On time</td></tr>
+                      <tr class="crm-hover"><td class="py-2.5 px-3 font-medium text-main">Fri, Nov 20, 2026</td><td class="py-2.5 px-3"><span class="badge badge-warn">Tardy</span></td><td class="py-2.5 px-3 text-sub num-tabular">8:14 AM</td><td class="py-2.5 px-3 text-sub">Sinkor 12th St traffic congestion</td></tr>
+                      <tr class="crm-hover"><td class="py-2.5 px-3 font-medium text-main">Thu, Nov 19, 2026</td><td class="py-2.5 px-3"><span class="badge badge-success">Present</span></td><td class="py-2.5 px-3 text-sub num-tabular">7:55 AM</td><td class="py-2.5 px-3 text-sub">On time</td></tr>
+                      <tr class="crm-hover"><td class="py-2.5 px-3 font-medium text-main">Wed, Nov 18, 2026</td><td class="py-2.5 px-3"><span class="badge badge-info">Excused</span></td><td class="py-2.5 px-3 text-sub num-tabular">—</td><td class="py-2.5 px-3 text-sub">Clinic appointment (Notice provided)</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Homeroom & Bus Info -->
+              <div class="space-y-4">
+                <div class="crm-card p-5 space-y-3">
+                  <h4 class="text-xs font-semibold text-main uppercase tracking-wider">Homeroom Teacher</h4>
+                  <div class="flex items-center space-x-3 pt-1">
+                    <div class="w-10 h-10 rounded-full crm-subtle border crm-border flex items-center justify-center font-bold text-sm text-main">GJ</div>
+                    <div>
+                      <div class="font-semibold text-main text-xs">Grace Johnson</div>
+                      <div class="text-[11px] text-sub">Grade 6A Homeroom &amp; English</div>
+                      <div class="text-[11px] text-sub mt-0.5">+231 77 555 0004</div>
+                    </div>
+                  </div>
+                  <div class="pt-2">
+                    <button onclick="openParentInquiryModal('Teacher: Grace Johnson')" class="btn-secondary w-full py-1.5 text-xs">Send Message to Teacher</button>
+                  </div>
+                </div>
+
+                <div class="crm-card p-5 space-y-3">
+                  <h4 class="text-xs font-semibold text-main uppercase tracking-wider">Transportation</h4>
+                  <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span class="text-sub">Bus Route:</span><span class="font-medium text-main">Route 3 · Sinkor Old Road</span></div>
+                    <div class="flex justify-between"><span class="text-sub">Pickup Stop:</span><span class="font-medium text-main">12th Street Junction (7:15 AM)</span></div>
+                    <div class="flex justify-between"><span class="text-sub">Dropoff Stop:</span><span class="font-medium text-main">12th Street Junction (3:15 PM)</span></div>
+                    <div class="flex justify-between"><span class="text-sub">Conductor:</span><span class="font-medium text-main">Gabriel Doe (+231 77 999 1122)</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 2: Academic Grades & Report Card -->
+          <div id="parentSubtabGrades" class="hidden space-y-4">
+            <div class="crm-card p-5 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b crm-border">
+                <div>
+                  <h3 class="text-sm font-semibold text-main">Liberian 6-Period &amp; Semester Gradebook</h3>
+                  <p class="text-xs text-sub mt-0.5">Ministry of Education Standard Grading Scale (Passing: 70%).</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button onclick="openDocPreview('report_card', 'STU-101')" class="btn-primary px-3 py-1.5 text-xs flex items-center space-x-1.5">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    <span>View Official PDF Report Card</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-xs text-left">
+                  <thead>
+                    <tr class="text-[11px] uppercase text-sub border-b crm-border">
+                      <th class="py-2.5 px-3">Subject</th>
+                      <th class="py-2.5 px-3 text-center">Period 1</th>
+                      <th class="py-2.5 px-3 text-center">Period 2</th>
+                      <th class="py-2.5 px-3 text-center">Period 3</th>
+                      <th class="py-2.5 px-3 text-center">Sem 1 Exam</th>
+                      <th class="py-2.5 px-3 text-center font-semibold text-main">Sem 1 Avg</th>
+                      <th class="py-2.5 px-3 text-right">Remarks</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y crm-border">
+                    <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Mathematics</td><td class="py-2.5 px-3 text-center num-tabular text-body">90</td><td class="py-2.5 px-3 text-center num-tabular text-body font-semibold">92</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular font-bold text-main">91.0</td><td class="py-2.5 px-3 text-right"><span class="badge badge-success">Excellent</span></td></tr>
+                    <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">English Language Arts</td><td class="py-2.5 px-3 text-center num-tabular text-body">86</td><td class="py-2.5 px-3 text-center num-tabular text-body font-semibold">88</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular font-bold text-main">87.0</td><td class="py-2.5 px-3 text-right"><span class="badge badge-success">Very Good</span></td></tr>
+                    <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">General Science</td><td class="py-2.5 px-3 text-center num-tabular text-body">84</td><td class="py-2.5 px-3 text-center num-tabular text-body font-semibold">85</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular font-bold text-main">84.5</td><td class="py-2.5 px-3 text-right"><span class="badge badge-info">Good</span></td></tr>
+                    <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Social Studies / Civics</td><td class="py-2.5 px-3 text-center num-tabular text-body">88</td><td class="py-2.5 px-3 text-center num-tabular text-body font-semibold">89</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular font-bold text-main">88.5</td><td class="py-2.5 px-3 text-right"><span class="badge badge-success">Very Good</span></td></tr>
+                    <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Reading &amp; Phonics</td><td class="py-2.5 px-3 text-center num-tabular text-body">90</td><td class="py-2.5 px-3 text-center num-tabular text-body font-semibold">91</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular font-bold text-main">90.5</td><td class="py-2.5 px-3 text-right"><span class="badge badge-success">Excellent</span></td></tr>
+                    <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Bible &amp; Moral Instruction</td><td class="py-2.5 px-3 text-center num-tabular text-body">93</td><td class="py-2.5 px-3 text-center num-tabular text-body font-semibold">94</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular font-bold text-main">93.5</td><td class="py-2.5 px-3 text-right"><span class="badge badge-success">Distinction</span></td></tr>
+                    <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Physical Education</td><td class="py-2.5 px-3 text-center num-tabular text-body">88</td><td class="py-2.5 px-3 text-center num-tabular text-body font-semibold">90</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular text-sub">—</td><td class="py-2.5 px-3 text-center num-tabular font-bold text-main">89.0</td><td class="py-2.5 px-3 text-right"><span class="badge badge-success">Very Good</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 3: Tuition & Mobile Money -->
+          <div id="parentSubtabFees" class="hidden space-y-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <!-- Invoice Summary Card -->
+              <div class="lg:col-span-2 crm-card p-5 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b crm-border">
+                  <div>
+                    <h3 class="text-sm font-semibold text-main">Tuition Fee Ledger (Academic Year 2026/27)</h3>
+                    <p class="text-xs text-sub mt-0.5">Invoice #INV-2026-6A04 · Ezekiel Kollie</p>
+                  </div>
+                  <span id="parentInvoiceStatusBadge" class="badge badge-warn text-xs">Partial Balance Due</span>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                  <div class="flex justify-between py-1 border-b crm-border">
+                    <span class="text-sub">Total Billed Tuition &amp; Mandatory Fees:</span>
+                    <span class="font-semibold text-main num-tabular">LRD 70,000.00</span>
+                  </div>
+                  <div class="flex justify-between py-1 border-b crm-border">
+                    <span class="text-sub">Total Payments Received (MoMo / Orange):</span>
+                    <span id="parentInvoicePaidAmount" class="font-semibold text-emerald-600 dark:text-emerald-400 num-tabular">LRD 51,500.00</span>
+                  </div>
+                  <div class="flex justify-between py-1.5 text-sm font-bold">
+                    <span class="text-main">Remaining Outstanding Balance:</span>
+                    <span id="parentInvoiceBalanceAmount" class="text-main num-tabular text-base text-rose-600 dark:text-rose-400">LRD 18,500.00</span>
+                  </div>
+                </div>
+
+                <div class="p-3.5 rounded-lg crm-subtle border crm-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <div class="font-semibold text-main text-xs">Instant Settlement via Mobile Money</div>
+                    <div class="text-[11px] text-sub">Lonestar Cell MTN MoMo or Orange Money Liberia with instant official SMS &amp; PDF receipt.</div>
+                  </div>
+                  <button id="parentPayMomoBtn" onclick="openMomoCheckout('FEE-204', 'STU-101', 18500)" class="btn-primary px-4 py-2 text-xs flex items-center space-x-1.5 shrink-0">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    <span>Pay LRD 18,500 with MoMo</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Receipts History -->
+              <div class="crm-card p-5 space-y-3">
+                <h4 class="text-xs font-semibold text-main uppercase tracking-wider">Payment Receipts</h4>
+                <div id="parentReceiptsList" class="space-y-2.5">
+                  <div class="p-2.5 rounded-md crm-subtle border crm-border text-xs space-y-1">
+                    <div class="flex justify-between font-semibold text-main">
+                      <span>RCP-904</span>
+                      <span class="num-tabular text-emerald-600 dark:text-emerald-400">LRD 21,500.00</span>
+                    </div>
+                    <div class="text-[11px] text-sub flex justify-between">
+                      <span>Orange Money Liberia</span>
+                      <span>Oct 12, 2026</span>
+                    </div>
+                    <div class="pt-1 text-right">
+                      <button onclick="openDocPreview('receipt', 'RCP-904')" class="text-[11px] font-medium hover:underline text-blue-600 dark:text-blue-400">View PDF Receipt</button>
+                    </div>
+                  </div>
+
+                  <div class="p-2.5 rounded-md crm-subtle border crm-border text-xs space-y-1">
+                    <div class="flex justify-between font-semibold text-main">
+                      <span>RCP-901</span>
+                      <span class="num-tabular text-emerald-600 dark:text-emerald-400">LRD 30,000.00</span>
+                    </div>
+                    <div class="text-[11px] text-sub flex justify-between">
+                      <span>Lonestar MTN MoMo</span>
+                      <span>Sep 05, 2026</span>
+                    </div>
+                    <div class="pt-1 text-right">
+                      <button onclick="openDocPreview('receipt', 'RCP-901')" class="text-[11px] font-medium hover:underline text-blue-600 dark:text-blue-400">View PDF Receipt</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subtab 4: Campus Notices & Inquiries -->
+          <div id="parentSubtabNotices" class="hidden space-y-4">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div class="lg:col-span-2 space-y-3">
+                <div class="crm-card p-4 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="badge badge-info text-[10px]">Campus Broadcast</span>
+                    <span class="text-[11px] text-sub">Nov 22, 2026</span>
+                  </div>
+                  <h4 class="text-sm font-semibold text-main">PTA General Assembly &amp; Mid-Term Report Collection</h4>
+                  <p class="text-xs text-body leading-relaxed">Parents and guardians of Sinkor &amp; Paynesville campuses are cordially invited to the PTA assembly this Friday at 2:00 PM in the Sinkor Campus Auditorium. Mid-term grade evaluations will be distributed.</p>
+                </div>
+
+                <div class="crm-card p-4 space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="badge badge-neutral text-[10px]">Academic Notice</span>
+                    <span class="text-[11px] text-sub">Nov 15, 2026</span>
+                  </div>
+                  <h4 class="text-sm font-semibold text-main">Liberian National Flag Day Campus Observance &amp; Schedule</h4>
+                  <p class="text-xs text-body leading-relaxed">Students are required to attend in full Monday uniform for the campus devotional exercises. Classes will dismiss at 1:00 PM.</p>
+                </div>
+              </div>
+
+              <!-- Submit Inquiry Box -->
+              <div class="crm-card p-5 space-y-3">
+                <h4 class="text-xs font-semibold text-main uppercase tracking-wider">Contact Administration</h4>
+                <p class="text-xs text-sub">Have questions regarding billing, exam clearance, or academics? Submit a direct inquiry.</p>
+                <button onclick="openParentInquiryModal('General Inquiry')" class="btn-primary w-full py-2 text-xs flex items-center justify-center space-x-1.5">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span>Submit Inquiry Note</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANE 15: STUDENT PORTAL -->
+        <section id="pane-portal-student" class="hidden space-y-5 w-full">
+          <!-- Student Header Banner -->
+          <div class="crm-card p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center space-x-3.5">
+              <div class="w-11 h-11 rounded-full crm-subtle border crm-border flex items-center justify-center font-bold text-base text-main">EK</div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <h2 class="text-lg font-semibold text-main tracking-tight">Ezekiel Kollie</h2>
+                  <span class="badge badge-success text-[11px]">Enrolled Student</span>
+                </div>
+                <p class="text-xs text-sub mt-0.5">Student ID: <span class="font-semibold text-main">STU-101</span> · Grade 6A · Primary Division · Sinkor Campus</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="p-2.5 rounded-lg crm-subtle border crm-border text-center">
+                <div class="text-[10px] uppercase text-sub font-semibold">Semester GPA</div>
+                <div class="text-sm font-bold text-main num-tabular">3.82 / 4.0</div>
+              </div>
+              <div class="p-2.5 rounded-lg crm-subtle border crm-border text-center">
+                <div class="text-[10px] uppercase text-sub font-semibold">Attendance</div>
+                <div class="text-sm font-bold text-emerald-600 dark:text-emerald-400 num-tabular">96.4%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Student Subtabs -->
+          <div class="subtab-bar" id="studentSubtabsBar">
+            <button onclick="switchStudentSubtab('schedule')" class="subtab active" data-subtab="schedule">8-Period Timetable</button>
+            <button onclick="switchStudentSubtab('grades')" class="subtab" data-subtab="grades">My Grades &amp; Progress</button>
+            <button onclick="switchStudentSubtab('library')" class="subtab" data-subtab="library">Library Books</button>
+          </div>
+
+          <!-- Student Tab 1: 8-Period Timetable -->
+          <div id="studentSubtabSchedule" class="crm-card p-5 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b crm-border">
+              <div>
+                <h3 class="text-sm font-semibold text-main">Weekly Class Schedule · Grade 6A</h3>
+                <p class="text-xs text-sub mt-0.5">Homeroom: Room 12 · Teacher: Grace Johnson</p>
+              </div>
+              <span class="badge badge-info text-xs">Term Active</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs text-left">
+                <thead>
+                  <tr class="text-[11px] uppercase text-sub border-b crm-border">
+                    <th class="py-2.5 px-3">Period</th>
+                    <th class="py-2.5 px-3">Time</th>
+                    <th class="py-2.5 px-3">Subject</th>
+                    <th class="py-2.5 px-3">Teacher</th>
+                    <th class="py-2.5 px-3">Room</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y crm-border">
+                  <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Period 1</td><td class="py-2.5 px-3 num-tabular text-sub">8:00 – 8:45 AM</td><td class="py-2.5 px-3 font-medium text-main">Mathematics</td><td class="py-2.5 px-3 text-body">Grace Johnson</td><td class="py-2.5 px-3 text-sub">Room 12</td></tr>
+                  <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Period 2</td><td class="py-2.5 px-3 num-tabular text-sub">8:45 – 9:30 AM</td><td class="py-2.5 px-3 font-medium text-main">English Language Arts</td><td class="py-2.5 px-3 text-body">Grace Johnson</td><td class="py-2.5 px-3 text-sub">Room 12</td></tr>
+                  <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Period 3</td><td class="py-2.5 px-3 num-tabular text-sub">9:30 – 10:15 AM</td><td class="py-2.5 px-3 font-medium text-main">General Science</td><td class="py-2.5 px-3 text-body">David Tarpeh</td><td class="py-2.5 px-3 text-sub">Science Lab A</td></tr>
+                  <tr class="bg-slate-100/40 dark:bg-zinc-800/40"><td class="py-2 px-3 font-medium text-sub">Recess</td><td class="py-2 px-3 num-tabular text-sub">10:15 – 10:45 AM</td><td class="py-2 px-3 text-sub" colspan="3">Morning Recess &amp; Snack</td></tr>
+                  <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Period 4</td><td class="py-2.5 px-3 num-tabular text-sub">10:45 – 11:30 AM</td><td class="py-2.5 px-3 font-medium text-main">Social Studies / Civics</td><td class="py-2.5 px-3 text-body">Mary Freeman</td><td class="py-2.5 px-3 text-sub">Room 12</td></tr>
+                  <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Period 5</td><td class="py-2.5 px-3 num-tabular text-sub">11:30 – 12:15 PM</td><td class="py-2.5 px-3 font-medium text-main">Reading &amp; Phonics</td><td class="py-2.5 px-3 text-body">Grace Johnson</td><td class="py-2.5 px-3 text-sub">Room 12</td></tr>
+                  <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Period 6</td><td class="py-2.5 px-3 num-tabular text-sub">12:15 – 1:00 PM</td><td class="py-2.5 px-3 font-medium text-main">Bible &amp; Moral Instruction</td><td class="py-2.5 px-3 text-body">Pastor Kollie</td><td class="py-2.5 px-3 text-sub">Room 12</td></tr>
+                  <tr class="crm-hover"><td class="py-2.5 px-3 font-semibold text-main">Period 7 &amp; 8</td><td class="py-2.5 px-3 num-tabular text-sub">1:00 – 2:30 PM</td><td class="py-2.5 px-3 font-medium text-main">Physical Education / Study Hall</td><td class="py-2.5 px-3 text-body">Coach Tamba</td><td class="py-2.5 px-3 text-sub">Campus Field</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Student Tab 2: Grades -->
+          <div id="studentSubtabGrades" class="hidden crm-card p-5 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b crm-border">
+              <div>
+                <h3 class="text-sm font-semibold text-main">Semester 1 Progress Report</h3>
+                <p class="text-xs text-sub mt-0.5">Passing benchmark: 70% · Honor roll threshold: 85%.</p>
+              </div>
+              <span class="badge badge-success text-xs">Honor Roll Standing</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="p-3 rounded-lg crm-subtle border crm-border"><div class="text-[11px] text-sub">Mathematics</div><div class="text-lg font-bold text-main num-tabular">92%</div><div class="text-[10px] text-emerald-600 dark:text-emerald-400">Grade A</div></div>
+              <div class="p-3 rounded-lg crm-subtle border crm-border"><div class="text-[11px] text-sub">English Language</div><div class="text-lg font-bold text-main num-tabular">88%</div><div class="text-[10px] text-emerald-600 dark:text-emerald-400">Grade B+</div></div>
+              <div class="p-3 rounded-lg crm-subtle border crm-border"><div class="text-[11px] text-sub">General Science</div><div class="text-lg font-bold text-main num-tabular">85%</div><div class="text-[10px] text-blue-600 dark:text-blue-400">Grade B</div></div>
+              <div class="p-3 rounded-lg crm-subtle border crm-border"><div class="text-[11px] text-sub">Bible &amp; Moral</div><div class="text-lg font-bold text-main num-tabular">94%</div><div class="text-[10px] text-emerald-600 dark:text-emerald-400">Grade A+</div></div>
+            </div>
+          </div>
+
+          <!-- Student Tab 3: Library -->
+          <div id="studentSubtabLibrary" class="hidden crm-card p-5 space-y-4">
+            <h3 class="text-sm font-semibold text-main">Issued Textbooks &amp; Library Loans</h3>
+            <div class="space-y-3">
+              <div class="p-3 rounded-lg crm-subtle border crm-border flex items-center justify-between text-xs">
+                <div>
+                  <div class="font-semibold text-main">Liberian Primary Mathematics Book 6</div>
+                  <div class="text-sub text-[11px]">Barcode: LIB-BK-204 · Issued: Sep 10, 2026</div>
+                </div>
+                <div class="text-right">
+                  <span class="badge badge-info">Due Dec 15, 2026</span>
+                </div>
+              </div>
+              <div class="p-3 rounded-lg crm-subtle border crm-border flex items-center justify-between text-xs">
+                <div>
+                  <div class="font-semibold text-main">West African Science Explorer (Primary 6)</div>
+                  <div class="text-sub text-[11px]">Barcode: LIB-BK-312 · Issued: Sep 12, 2026</div>
+                </div>
+                <div class="text-right">
+                  <span class="badge badge-info">Due Dec 15, 2026</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   </div>
+
+    <!-- ==========================================================================
+       SIGNATURE LIBERIAN CAMPUS AUTHENTICATION PAGE (FULL-PAGE VIEW)
+       ========================================================================== -->
+  <div id="pane-auth-showcase" class="hidden fixed inset-0 z-[100] overflow-y-auto flex flex-col justify-between" style="background: var(--bg-canvas);">
+    <!-- Background Ambient Atmosphere & Grid Layer -->
+    <div class="fixed inset-0 pointer-events-none opacity-30 dark:opacity-20 z-0" style="background-image: radial-gradient(var(--border-strong) 1px, transparent 1px); background-size: 28px 28px;"></div>
+    <div class="fixed top-0 left-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-20 dark:opacity-25" style="background: radial-gradient(circle, var(--brand-primary) 0%, transparent 70%);"></div>
+    <div class="fixed bottom-0 right-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none opacity-15 dark:opacity-20" style="background: radial-gradient(circle, #10b981 0%, transparent 70%);"></div>
+
+    <!-- Top Minimal Navbar -->
+    <header class="relative z-10 w-full px-4 sm:px-8 py-3.5 flex items-center justify-between border-b crm-border shrink-0 backdrop-blur-md bg-white/40 dark:bg-zinc-900/40">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm" style="background: var(--brand-primary); color: var(--brand-text);">
+          GI
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-sm font-bold text-main tracking-tight">Gojo Institute</span>
+            <span class="text-[10px] uppercase font-mono tracking-wider px-1.5 py-0.5 rounded crm-subtle text-sub hidden sm:inline">Monrovia, LR</span>
+          </div>
+          <p class="text-[11px] text-sub hidden sm:block">Sinkor &amp; Paynesville Campuses · Liberian SMS</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2.5">
+        <!-- Live System Status Beacon -->
+        <div class="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-full crm-subtle border crm-border text-[11px] text-sub">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="font-medium text-main">Campus Network Active</span>
+        </div>
+
+        <button onclick="toggleLightDarkTheme()" class="btn-secondary px-2.5 py-1.5 text-xs flex items-center space-x-1.5" aria-label="Toggle theme">
+          <svg class="w-3.5 h-3.5 text-sub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <span class="hidden sm:inline">Theme</span>
+        </button>
+
+        <button onclick="quickFillAndLogin('Principal')" class="btn-primary px-3.5 py-1.5 text-xs font-semibold flex items-center space-x-1.5 shadow-sm">
+          <span>Enter Workspace</span>
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Auth Center Stage -->
+    <main class="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 my-auto">
+      <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+
+        <!-- LEFT COLUMN: The Signature Digital Campus ID Card -->
+        <div class="lg:col-span-5 space-y-5">
+          <div class="space-y-2">
+            <div class="inline-flex items-center space-x-2 text-[10px] font-mono tracking-widest uppercase text-sub">
+              <span>Identity Verification</span>
+              <span>·</span>
+              <span>MoE Reg 2026/27</span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-main tracking-tight leading-tight">
+              One secure pass for all campus operations.
+            </h2>
+            <p class="text-xs text-sub leading-relaxed">
+              Serving 4,600 students across Sinkor and Paynesville with real-time academic, tuition, and attendance management.
+            </p>
+          </div>
+
+          <!-- THE HOLOGRAPHIC CAMPUS ID CARD -->
+          <div id="authHoloCard" class="relative rounded-2xl p-6 crm-card border crm-border space-y-4 shadow-2xl transition-all duration-300 overflow-hidden" style="background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 100%);">
+            <!-- Card Metallic Accent Strip -->
+            <div class="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-xl opacity-30 pointer-events-none" style="background: var(--brand-primary);"></div>
+
+            <!-- Card Header: Golden Chip & Institution Seal -->
+            <div class="flex items-center justify-between pb-3 border-b crm-border relative z-10">
+              <div class="flex items-center space-x-2.5">
+                <!-- Smart Chip Graphic -->
+                <div class="w-9 h-7 rounded border border-amber-500/50 bg-gradient-to-br from-amber-200 to-amber-400 dark:from-amber-600 dark:to-amber-800 p-1 flex flex-col justify-between shadow-inner">
+                  <div class="flex justify-between w-full"><span class="w-1.5 h-1 bg-amber-700/60 rounded-xs"></span><span class="w-1.5 h-1 bg-amber-700/60 rounded-xs"></span></div>
+                  <div class="h-0.5 bg-amber-700/40 w-full"></div>
+                  <div class="flex justify-between w-full"><span class="w-1.5 h-1 bg-amber-700/60 rounded-xs"></span><span class="w-1.5 h-1 bg-amber-700/60 rounded-xs"></span></div>
+                </div>
+                <div>
+                  <div class="text-[9px] uppercase font-mono tracking-widest text-sub">Republic of Liberia</div>
+                  <div class="text-xs font-bold text-main tracking-tight">Gojo Institute Credential</div>
+                </div>
+              </div>
+
+              <!-- Hologram Security Seal -->
+              <div class="px-2 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider uppercase border border-blue-400/30 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/40">
+                MoE Verified
+              </div>
+            </div>
+
+            <!-- Card Body: Live Dynamic Profile -->
+            <div class="flex items-center space-x-4 py-1 relative z-10">
+              <div id="authCardAvatar" class="w-14 h-14 rounded-2xl flex items-center justify-center font-extrabold text-lg shadow-md transition-all duration-300" style="background: var(--brand-primary); color: var(--brand-text);">
+                SK
+              </div>
+              <div class="space-y-0.5 min-w-0 flex-1">
+                <div class="flex items-center space-x-2">
+                  <h3 id="authCardPreviewName" class="text-base font-bold text-main truncate tracking-tight">Dr. Samuel Kollie</h3>
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                </div>
+                <div id="authCardPreviewRole" class="text-xs font-semibold text-sub">Principal · Campus Executive</div>
+                <div id="authCardPreviewId" class="text-[11px] font-mono text-sub tracking-wider">ID: STF-101 · LEVEL 5 ACCESS</div>
+              </div>
+            </div>
+
+            <!-- Card Footer: Catchment & Barcode Strip -->
+            <div class="pt-3 border-t crm-border space-y-2 relative z-10">
+              <div class="flex justify-between text-[11px] text-sub">
+                <span>Campus: <strong id="authCardCampusLabel" class="text-main">Sinkor Campus</strong></span>
+                <span class="font-mono">6.2907° N, 10.7605° W</span>
+              </div>
+
+              <!-- Barcode / Security Hash graphic -->
+              <div class="flex items-center justify-between pt-1">
+                <div class="flex items-center space-x-0.5 opacity-60">
+                  <span class="w-0.5 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-1 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-0.5 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-1.5 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-0.5 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-2 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-0.5 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-1 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-0.5 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-1.5 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-0.5 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-1 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                  <span class="w-2 h-4 bg-slate-800 dark:bg-slate-200"></span>
+                </div>
+                <span class="text-[10px] font-mono text-sub">LR-EDU-2026-ENCRYPTED</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Micro Metrics -->
+          <div class="grid grid-cols-3 gap-2.5 pt-1 text-center">
+            <div class="p-2 rounded-lg crm-subtle border crm-border">
+              <div class="text-[10px] text-sub font-mono uppercase">Enrollment</div>
+              <div class="text-xs font-bold text-main num-tabular">4,600</div>
+            </div>
+            <div class="p-2 rounded-lg crm-subtle border crm-border">
+              <div class="text-[10px] text-sub font-mono uppercase">Campuses</div>
+              <div class="text-xs font-bold text-main">Sinkor &amp; Payn.</div>
+            </div>
+            <div class="p-2 rounded-lg crm-subtle border crm-border">
+              <div class="text-[10px] text-sub font-mono uppercase">Currency</div>
+              <div class="text-xs font-bold text-main">LRD &amp; USD</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Tactile Glass Auth Card -->
+        <div class="lg:col-span-7 crm-card p-6 sm:p-8 rounded-2xl shadow-xl space-y-5">
+          <!-- Flow Switcher: Sign In / Forgot Password / Accept Invite -->
+          <div class="flex items-center justify-between pb-3.5 border-b crm-border">
+            <div class="flex space-x-1 p-1 rounded-xl crm-subtle border crm-border">
+              <button type="button" id="authTabSignIn" onclick="switchAuthSubScreen('signin')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white dark:bg-zinc-700 text-main shadow-sm transition-all">Sign In</button>
+              <button type="button" id="authTabForgot" onclick="switchAuthSubScreen('forgot')" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-sub hover:text-main transition-all">Forgot Password</button>
+              <button type="button" id="authTabInvite" onclick="switchAuthSubScreen('invite')" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-sub hover:text-main transition-all">Accept Invite</button>
+            </div>
+            <span class="text-[10px] font-mono uppercase tracking-wider text-sub hidden sm:inline">256-Bit TLS</span>
+          </div>
+
+          <!-- SUB-VIEW 1: SIGN IN -->
+          <div id="authSubSignIn" class="space-y-4">
+            <div class="space-y-1">
+              <h3 class="text-lg font-bold text-main tracking-tight">Authenticate to your workspace</h3>
+              <p class="text-xs text-sub">Sign in using your institutional email or Liberian mobile number.</p>
+            </div>
+
+            <div class="space-y-3.5">
+              <!-- Identifier Field -->
+              <div>
+                <label class="block text-xs font-medium text-body mb-1.5">Email or Liberian Mobile (+231)</label>
+                <div class="relative flex items-center">
+                  <div class="absolute left-3 flex items-center space-x-1.5 pointer-events-none text-sub">
+                    <span class="text-xs font-bold text-main">+231</span>
+                    <span class="text-sub font-light">|</span>
+                  </div>
+                  <input type="text" id="authLoginIdentifier" oninput="handleAuthIdentifierInput(this.value)" value="skollie@gojo.edu.lr" placeholder="77 555 0001 or email@gojo.edu.lr" class="crm-input w-full pl-16 pr-4 py-2 text-xs font-medium" />
+                </div>
+              </div>
+
+              <!-- Password Field -->
+              <div>
+                <div class="flex justify-between items-center mb-1.5">
+                  <label class="text-xs font-medium text-body">Password</label>
+                  <button type="button" onclick="switchAuthSubScreen('forgot')" class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">Forgot password?</button>
+                </div>
+                <div class="relative flex items-center">
+                  <input type="password" id="authLoginPassword" value="Liberia2026#Secure" class="crm-input w-full px-3 py-2 text-xs pr-12 font-medium" />
+                  <button type="button" onclick="togglePasswordVisibility('authLoginPassword', this)" class="absolute right-3 text-sub hover:text-main text-xs font-medium">Show</button>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-xs">
+                <label class="flex items-center space-x-2 text-body cursor-pointer">
+                  <input type="checkbox" checked class="rounded border crm-border" />
+                  <span>Remember this device for 30 days</span>
+                </label>
+              </div>
+
+              <!-- Submit Button -->
+              <button type="button" onclick="handleAuthSignInSuccess()" class="btn-primary w-full py-2.5 text-xs font-semibold flex items-center justify-center space-x-2 shadow-sm">
+                <span>Sign In to Gojo Institute</span>
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </button>
+
+              <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t crm-border"></div>
+                <span class="flex-shrink mx-3 text-[10px] uppercase font-mono tracking-wider text-sub">or single sign-on</span>
+                <div class="flex-grow border-t crm-border"></div>
+              </div>
+
+              <!-- Google Workspace Button -->
+              <button type="button" onclick="handleAuthSignInSuccess()" class="btn-secondary w-full py-2 text-xs flex items-center justify-center space-x-2.5">
+                <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                <span>Google Workspace for Education</span>
+              </button>
+            </div>
+
+            <!-- TACTILE ROLE KEYCARDS SELECTOR -->
+            <div class="pt-3 border-t crm-border space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-semibold text-main uppercase tracking-wider">Demo Role Keycards</span>
+                <span class="text-[10px] text-sub">Hover to inspect · Click to login</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <button type="button" onmouseenter="previewHoloCard('Principal')" onclick="quickFillAndLogin('Principal')" class="p-2 rounded-lg crm-subtle border crm-border text-left hover:border-blue-500 transition-all group">
+                  <div class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span><span class="text-xs font-bold text-main group-hover:text-blue-600 dark:group-hover:text-blue-400">Principal</span></div>
+                  <div class="text-[10px] text-sub truncate mt-0.5">Dr. Samuel Kollie</div>
+                </button>
+                <button type="button" onmouseenter="previewHoloCard('Registrar')" onclick="quickFillAndLogin('Registrar')" class="p-2 rounded-lg crm-subtle border crm-border text-left hover:border-blue-500 transition-all group">
+                  <div class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span><span class="text-xs font-bold text-main group-hover:text-blue-600 dark:group-hover:text-blue-400">Registrar</span></div>
+                  <div class="text-[10px] text-sub truncate mt-0.5">Beatrice Toe</div>
+                </button>
+                <button type="button" onmouseenter="previewHoloCard('Bursar')" onclick="quickFillAndLogin('Bursar')" class="p-2 rounded-lg crm-subtle border crm-border text-left hover:border-blue-500 transition-all group">
+                  <div class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span><span class="text-xs font-bold text-main group-hover:text-blue-600 dark:group-hover:text-blue-400">Bursar</span></div>
+                  <div class="text-[10px] text-sub truncate mt-0.5">Joseph Freeman</div>
+                </button>
+                <button type="button" onmouseenter="previewHoloCard('Teacher')" onclick="quickFillAndLogin('Teacher')" class="p-2 rounded-lg crm-subtle border crm-border text-left hover:border-blue-500 transition-all group">
+                  <div class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span class="text-xs font-bold text-main group-hover:text-blue-600 dark:group-hover:text-blue-400">Teacher</span></div>
+                  <div class="text-[10px] text-sub truncate mt-0.5">Grace Johnson (G6A)</div>
+                </button>
+                <button type="button" onmouseenter="previewHoloCard('Parent')" onclick="quickFillAndLogin('Parent')" class="p-2 rounded-lg crm-subtle border crm-border text-left hover:border-blue-500 transition-all group">
+                  <div class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span><span class="text-xs font-bold text-main group-hover:text-blue-600 dark:group-hover:text-blue-400">Guardian</span></div>
+                  <div class="text-[10px] text-sub truncate mt-0.5">Helena Kollie</div>
+                </button>
+                <button type="button" onmouseenter="previewHoloCard('Student')" onclick="quickFillAndLogin('Student')" class="p-2 rounded-lg crm-subtle border crm-border text-left hover:border-blue-500 transition-all group">
+                  <div class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span><span class="text-xs font-bold text-main group-hover:text-blue-600 dark:group-hover:text-blue-400">Student</span></div>
+                  <div class="text-[10px] text-sub truncate mt-0.5">Ezekiel Kollie (G6A)</div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-VIEW 2: FORGOT PASSWORD -->
+          <div id="authSubForgot" class="hidden space-y-4">
+            <div class="space-y-1">
+              <h3 class="text-lg font-bold text-main tracking-tight">Recover your account</h3>
+              <p class="text-xs text-sub">Enter your registered email or +231 phone number to receive an OTP code.</p>
+            </div>
+
+            <div class="space-y-3.5">
+              <div>
+                <label class="block text-xs font-medium text-body mb-1.5">Email or Liberian Mobile (+231)</label>
+                <input type="text" id="forgotInputTarget" placeholder="+231 77 555 0001 or email@gojo.edu.lr" class="crm-input w-full px-3 py-2 text-xs" />
+              </div>
+
+              <button type="button" onclick="simulateSendOtp()" class="btn-secondary w-full py-2.5 text-xs font-semibold">
+                Send 6-Digit OTP Verification Code
+              </button>
+
+              <div id="otpInputSection" class="pt-2 space-y-3 hidden">
+                <label class="block text-xs font-medium text-body">Enter 6-Digit Verification Code</label>
+                <div class="flex space-x-2">
+                  <input type="text" maxlength="1" value="7" class="crm-input w-10 text-center py-2 text-sm font-bold" />
+                  <input type="text" maxlength="1" value="2" class="crm-input w-10 text-center py-2 text-sm font-bold" />
+                  <input type="text" maxlength="1" value="9" class="crm-input w-10 text-center py-2 text-sm font-bold" />
+                  <input type="text" maxlength="1" value="4" class="crm-input w-10 text-center py-2 text-sm font-bold" />
+                  <input type="text" maxlength="1" value="1" class="crm-input w-10 text-center py-2 text-sm font-bold" />
+                  <input type="text" maxlength="1" value="8" class="crm-input w-10 text-center py-2 text-sm font-bold" />
+                </div>
+
+                <div>
+                  <label class="block text-xs font-medium text-body mb-1">New Password</label>
+                  <input type="password" value="Gojo2026#Secure" class="crm-input w-full px-3 py-2 text-xs" />
+                </div>
+
+                <button type="button" onclick="simulateCompletePasswordReset()" class="btn-primary w-full py-2.5 text-xs font-semibold">
+                  Save New Password &amp; Sign In
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUB-VIEW 3: ACCEPT INVITE -->
+          <div id="authSubInvite" class="hidden space-y-4">
+            <div class="space-y-1">
+              <h3 class="text-lg font-bold text-main tracking-tight">Accept official campus invitation</h3>
+              <p class="text-xs text-sub">Activate your account credentials to access Gojo Institute.</p>
+            </div>
+
+            <div class="p-3.5 rounded-xl crm-subtle border crm-border space-y-2 text-xs">
+              <div class="flex justify-between"><span class="text-sub">Invited Role:</span><span class="font-bold text-main">Teacher · Grade 6A Homeroom</span></div>
+              <div class="flex justify-between"><span class="text-sub">Campus Assignment:</span><span class="font-medium text-main">Sinkor Campus (Room 12)</span></div>
+              <div class="flex justify-between"><span class="text-sub">Authorized By:</span><span class="font-medium text-main">Dr. Samuel Kollie (Principal)</span></div>
+            </div>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-medium text-body mb-1">Full Legal Name</label>
+                <input type="text" value="Grace Johnson" class="crm-input w-full px-3 py-2 text-xs font-medium" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-body mb-1">Liberian Mobile Number</label>
+                <input type="text" value="+231 77 555 0004" class="crm-input w-full px-3 py-2 text-xs font-medium" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-body mb-1">Create Account Password</label>
+                <input type="password" value="Liberia2026#Staff" class="crm-input w-full px-3 py-2 text-xs font-medium" />
+              </div>
+
+              <button type="button" onclick="handleAuthSignInSuccess()" class="btn-primary w-full py-2.5 text-xs font-semibold shadow-sm">
+                Complete Setup &amp; Enter Campus
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Institutional Security Footer -->
+    <footer class="relative z-10 w-full px-6 py-3.5 border-t crm-border text-center text-xs text-sub shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="text-[11px] font-mono">
+        GJS-AUTH-GATEWAY // TLS 1.3 // SINKOR &amp; PAYNESVILLE CAMPUSES, MONROVIA
+      </div>
+      <div class="text-[11px] text-sub">
+        Republic of Liberia · Ministry of Education Official Accreditation LR-EDU-2026
+      </div>
+    </footer>
+  </div>
+
 
   <!-- STUDENT INSPECTOR DRAWER (3 SUBTABS: PROFILE / WELFARE & PICKUP / CONDUCT) -->
   <div id="studentInspectorBackdrop" class="hidden crm-drawer-backdrop fixed inset-0 z-40 flex justify-end" onclick="closeOnBackdropClick(event, closeStudentInspector)">
@@ -2806,7 +3582,10 @@
       </div>
       <div class="shrink-0 px-6 py-4 border-t crm-border flex justify-between text-xs">
         <button onclick="deleteApplicantRecord()" class="btn-secondary px-3 py-1.5 text-xs text-rose-600">Remove</button>
-        <button onclick="closeApplicantInspector()" class="btn-secondary px-3 py-1.5 text-xs">Close</button>
+        <div class="flex space-x-2">
+          <button onclick="openConvertApplicantModal(state.activeApplicantId)" class="btn-primary px-3 py-1.5 text-xs">Convert to Student</button>
+          <button onclick="closeApplicantInspector()" class="btn-secondary px-3 py-1.5 text-xs">Close</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2827,6 +3606,7 @@
         </div>
         <div class="flex gap-2">
           <button onclick="openPaymentModal(state.activeFeeId)" class="btn-primary px-3 py-1.5 text-xs">+ Record LRD Payment</button>
+          <button onclick="openMomoCheckout(state.activeFeeId, null, 18500)" class="btn-secondary px-3 py-1.5 text-xs text-amber-600 dark:text-amber-400 font-semibold">Collect via Mobile Money</button>
           <button onclick="openReceiptPreview(state.activeFeeId)" class="btn-secondary px-3 py-1.5 text-xs">Print Receipt / Permit</button>
         </div>
       </div>
@@ -3014,8 +3794,9 @@
       <div class="flex items-center justify-between pb-3 border-b crm-border"><h3 class="text-base font-semibold text-main">Add Faculty / Staff</h3><button onclick="closeNewStaffModal()" class="text-sub hover:text-main">✕</button></div>
       <div class="space-y-3">
         <div><label class="block font-medium text-body mb-1">Full Name</label><input id="newStaffName" class="crm-input w-full px-3 py-2" placeholder="e.g. Aaron B. Cooper" /></div>
-        <div><label class="block font-medium text-body mb-1">Department</label><select id="newStaffDept" class="crm-input w-full px-3 py-2"><option>Mathematics &amp; Sciences</option><option>Humanities &amp; Languages</option><option>Early Childhood</option><option>Administration</option></select></div>
+        <div><label class="block font-medium text-body mb-1">Division</label><select id="newStaffDept" class="crm-input w-full px-3 py-2"><option value="">Unassigned</option><option>Early Childhood</option><option>Elementary</option><option>Junior High</option><option>Senior High</option></select></div>
         <div><label class="block font-medium text-body mb-1">Role / Subject</label><input id="newStaffRole" class="crm-input w-full px-3 py-2" placeholder="Physics &amp; Chemistry Teacher" /></div>
+        <div><label class="block font-medium text-body mb-1">Email</label><input id="newStaffEmail" type="email" class="crm-input w-full px-3 py-2" placeholder="aaron.cooper@gojo.test" /></div>
         <div><label class="block font-medium text-body mb-1">Phone (LR)</label><input id="newStaffPhone" class="crm-input w-full px-3 py-2" placeholder="+231 77 555 0192" /></div>
       </div>
       <div class="pt-3 border-t crm-border flex justify-end gap-2"><button onclick="closeNewStaffModal()" class="btn-secondary px-4 py-1.5 text-xs">Cancel</button><button onclick="createNewStaff()" class="btn-primary px-4 py-1.5 text-xs">Add Staff</button></div>
@@ -3027,6 +3808,7 @@
       <div class="flex items-center justify-between pb-3 border-b crm-border"><h3 class="text-base font-semibold text-main">Add Parent / Guardian</h3><button onclick="closeNewParentModal()" class="text-sub hover:text-main">✕</button></div>
       <div class="space-y-3">
         <div><label class="block font-medium text-body mb-1">Full Name</label><input id="newParName" class="crm-input w-full px-3 py-2" placeholder="e.g. Helena Flomo" /></div>
+        <div><label class="block font-medium text-body mb-1">Email</label><input id="newParEmail" type="email" class="crm-input w-full px-3 py-2" placeholder="helena.flomo@gojo.test" /></div>
         <div class="grid grid-cols-2 gap-3">
           <div><label class="block font-medium text-body mb-1">Phone (LR)</label><input id="newParPhone" class="crm-input w-full px-3 py-2" placeholder="+231 88 655 0121" /></div>
           <div><label class="block font-medium text-body mb-1">Zone</label><input id="newParZone" class="crm-input w-full px-3 py-2" placeholder="Sinkor, Monrovia" /></div>
@@ -3079,6 +3861,312 @@
       </select>
       <div id="aiModalResultBox" class="p-4 rounded-lg crm-subtle text-xs text-body space-y-2 leading-relaxed"></div>
       <div class="pt-3 border-t crm-border flex justify-end"><button onclick="closeAiModal()" class="btn-secondary px-4 py-1.5 text-xs">Done</button></div>
+    </div>
+  </div>
+
+  
+  <!-- PWA OFFLINE OUTBOX & CONFLICT RESOLUTION DRAWER -->
+  <div id="syncOutboxDrawerBackdrop" class="hidden crm-drawer-backdrop fixed inset-0 z-40 flex justify-end" onclick="closeOnBackdropClick(event, toggleSyncOutboxDrawer)">
+    <div id="syncOutboxDrawerPanel" class="crm-drawer-panel h-full flex flex-col p-6 justify-between" style="width:min(100%, 36rem);">
+      <div class="space-y-4 overflow-y-auto">
+        <div class="flex items-center justify-between pb-4 border-b crm-border">
+          <div>
+            <h3 class="text-base font-semibold text-main">PWA Offline &amp; Sync Engine</h3>
+            <p class="text-xs text-sub mt-0.5">Workbox Service Worker &amp; IndexedDB optimistic queue.</p>
+          </div>
+          <button onclick="toggleSyncOutboxDrawer()" class="btn-secondary p-1.5">✕</button>
+        </div>
+
+        <!-- Simulation Control Bar -->
+        <div class="p-3.5 rounded-lg crm-subtle border crm-border space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-medium text-main">Network Simulator</span>
+            <span id="simulatorStatusBadge" class="badge badge-success text-[10px]">Online</span>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-1">
+            <button id="toggleOfflineBtn" onclick="toggleOfflineSimulator()" class="btn-secondary px-3 py-1.5 text-xs">
+              Simulate Network Disconnect
+            </button>
+            <button onclick="simulateConflict()" class="btn-secondary px-3 py-1.5 text-xs text-rose-600 dark:text-rose-400">
+              Inject 409 Server Conflict
+            </button>
+          </div>
+        </div>
+
+        <!-- Conflict Resolution Box (Visible when conflict active) -->
+        <div id="conflictResolutionBox" class="hidden p-4 rounded-lg border border-rose-300 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="badge badge-danger text-[10px]">409 Conflict</span>
+              <span class="text-xs font-semibold text-main">Concurrent Grade Mutation</span>
+            </div>
+            <span class="text-[10px] text-sub">STU-101 · Mathematics</span>
+          </div>
+          <p class="text-xs text-body leading-relaxed">
+            A concurrent score modification was detected. Another educator submitted score updates to the server while you were working offline.
+          </p>
+
+          <div class="grid grid-cols-2 gap-3 text-xs pt-1">
+            <div class="p-2.5 rounded bg-white dark:bg-zinc-800 border crm-border space-y-1">
+              <div class="text-[10px] uppercase font-bold text-sub">Your Offline Mutation</div>
+              <div class="text-base font-bold text-main num-tabular">Score: 88%</div>
+              <div class="text-[10px] text-sub">Grace Johnson · 8 mins ago</div>
+            </div>
+            <div class="p-2.5 rounded bg-white dark:bg-zinc-800 border crm-border space-y-1">
+              <div class="text-[10px] uppercase font-bold text-sub">Server Current State</div>
+              <div class="text-base font-bold text-emerald-600 dark:text-emerald-400 num-tabular">Score: 94%</div>
+              <div class="text-[10px] text-sub">Beatrice Toe (Registrar) · 3 mins ago</div>
+            </div>
+          </div>
+
+          <div class="pt-2 flex flex-wrap gap-2 justify-end">
+            <button onclick="resolveConflict('server')" class="btn-secondary px-3 py-1.5 text-xs">Accept Server (94%)</button>
+            <button onclick="resolveConflict('mine')" class="btn-secondary px-3 py-1.5 text-xs">Keep Mine (88%)</button>
+            <button onclick="resolveConflict('merge')" class="btn-primary px-3 py-1.5 text-xs">Manual Merge (Average 91%)</button>
+          </div>
+        </div>
+
+        <!-- Pending Mutation Queue -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-semibold text-main">Queued Offline Mutations</span>
+            <span id="drawerQueueCountBadge" class="text-sub text-[11px] num-tabular">2 pending</span>
+          </div>
+
+          <div id="drawerOutboxQueueList" class="space-y-2 text-xs">
+            <!-- Mut 1 -->
+            <div class="p-3 rounded-lg crm-card border crm-border space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-main">Mark Daily Attendance</span>
+                <span class="badge badge-warn text-[10px]">Pending Upload</span>
+              </div>
+              <p class="text-sub text-[11px]">Grade 6A Homeroom: 31 Present, 1 Absent (Faith Mulbah).</p>
+              <div class="flex justify-between text-[10px] text-sub pt-1 border-t crm-border">
+                <span>Idempotency: 8f1e2c90-b1a4</span>
+                <span>Enqueued 4m ago</span>
+              </div>
+            </div>
+
+            <!-- Mut 2 -->
+            <div class="p-3 rounded-lg crm-card border crm-border space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="font-semibold text-main">Record Conduct Note</span>
+                <span class="badge badge-warn text-[10px]">Pending Upload</span>
+              </div>
+              <p class="text-sub text-[11px]">STU-102: Selected for Liberian National Math Olympiad.</p>
+              <div class="flex justify-between text-[10px] text-sub pt-1 border-t crm-border">
+                <span>Idempotency: 3d4a5b6c-7e8f</span>
+                <span>Enqueued 2m ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t crm-border flex items-center justify-between">
+        <span class="text-[11px] text-sub">IndexedDB store: gojo_outbox_v1</span>
+        <button id="drawerSyncAllBtn" onclick="syncAllPending()" class="btn-primary px-4 py-2 text-xs flex items-center space-x-1.5">
+          <span>Drain Outbox &amp; Sync</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIBERIAN MOBILE MONEY (MOMO & ORANGE) CHECKOUT MODAL -->
+  <div id="momoCheckoutModal" class="hidden crm-modal-backdrop fixed inset-0 bg-slate-900/50 backdrop-blur-[1px] z-50 flex items-center justify-center p-4" onclick="closeOnBackdropClick(event, closeMomoCheckout)">
+    <div class="w-full max-w-md crm-card p-6 space-y-4 text-xs">
+      <div class="flex items-center justify-between pb-3 border-b crm-border">
+        <div>
+          <h3 class="text-base font-semibold text-main">Liberian Mobile Money Checkout</h3>
+          <p class="text-xs text-sub mt-0.5">Lonestar Cell MTN MoMo &amp; Orange Money Liberia.</p>
+        </div>
+        <button onclick="closeMomoCheckout()" class="text-sub hover:text-main">✕</button>
+      </div>
+
+      <!-- Step 1: Carrier & Target -->
+      <div id="momoStep1" class="space-y-4">
+        <div>
+          <label class="block font-medium text-body mb-1.5">Select Mobile Money Carrier</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" id="carrierBtnMtn" onclick="selectMomoCarrier('mtn')" class="p-3 rounded-lg border-2 border-amber-500 bg-amber-50/40 dark:bg-amber-950/20 text-left transition-all">
+              <div class="font-bold text-main text-xs">Lonestar MTN MoMo</div>
+              <div class="text-[10px] text-sub mt-0.5">Dial *156# · Liberia</div>
+            </button>
+            <button type="button" id="carrierBtnOrange" onclick="selectMomoCarrier('orange')" class="p-3 rounded-lg border crm-border text-left hover:border-orange-500 transition-all">
+              <div class="font-bold text-main text-xs">Orange Money Liberia</div>
+              <div class="text-[10px] text-sub mt-0.5">Dial *144# · Liberia</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-lg crm-subtle border crm-border space-y-1">
+          <div class="flex justify-between"><span class="text-sub">Student Account:</span><span id="momoStudentName" class="font-semibold text-main">Ezekiel Kollie (STU-101)</span></div>
+          <div class="flex justify-between"><span class="text-sub">Tuition Invoice:</span><span id="momoInvoiceId" class="text-body font-medium">INV-2026-6A04</span></div>
+          <div class="flex justify-between"><span class="text-sub">Due Amount:</span><span id="momoAmountDisplay" class="font-bold text-main num-tabular">LRD 18,500.00</span></div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-body mb-1">Subscriber Mobile Number (+231)</label>
+          <input type="text" id="momoPhoneInput" value="+231 88 555 1234" placeholder="+231 88... or 077..." class="crm-input w-full px-3 py-2 text-xs" />
+          <p class="text-[10px] text-sub mt-1">A real-time USSD push prompt will be dispatched to this number.</p>
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button onclick="closeMomoCheckout()" class="btn-secondary px-3 py-1.5 text-xs">Cancel</button>
+          <button onclick="initiateMomoPush()" class="btn-primary px-4 py-1.5 text-xs flex items-center space-x-1.5">
+            <span>Send Collection Request</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: USSD Push Simulation -->
+      <div id="momoStep2" class="hidden py-6 text-center space-y-4">
+        <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full animate-ping bg-amber-400 opacity-20"></div>
+          <div class="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-lg">
+            USSD
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <h4 class="text-sm font-semibold text-main">Awaiting Mobile Money Approval</h4>
+          <p class="text-xs text-sub">Push prompt dispatched to <span id="momoTargetPhone" class="font-semibold text-main">+231 88 555 1234</span>.</p>
+          <p class="text-[11px] text-sub">Please enter your 4-digit PIN on your phone to authorize.</p>
+        </div>
+
+        <div class="pt-3">
+          <button onclick="simulateMomoApproval()" class="btn-primary px-4 py-2 text-xs font-semibold">
+            Simulate Subscriber Approves (Enter PIN)
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Confirmation -->
+      <div id="momoStep3" class="hidden py-4 space-y-4">
+        <div class="text-center space-y-1.5">
+          <div class="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center font-bold text-xl">✓</div>
+          <h4 class="text-base font-bold text-main">Payment Confirmed!</h4>
+          <p class="text-xs text-sub">Tuition balance fully settled. Official receipt generated.</p>
+        </div>
+
+        <div class="p-3.5 rounded-lg crm-subtle border crm-border space-y-2 text-xs">
+          <div class="flex justify-between"><span class="text-sub">Receipt Number:</span><span id="momoReceiptId" class="font-bold text-main">RCP-907</span></div>
+          <div class="flex justify-between"><span class="text-sub">Amount Paid:</span><span class="font-bold text-emerald-600 dark:text-emerald-400 num-tabular">LRD 18,500.00</span></div>
+          <div class="flex justify-between"><span class="text-sub">Method:</span><span id="momoMethodLabel" class="text-main">Lonestar MTN MoMo</span></div>
+          <div class="flex justify-between"><span class="text-sub">Exam Clearance:</span><span class="badge badge-success text-[10px]">CLEARED</span></div>
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button onclick="openDocPreview('receipt', 'RCP-907')" class="btn-secondary px-3 py-1.5 text-xs">View Printable Receipt</button>
+          <button onclick="closeMomoCheckout()" class="btn-primary px-4 py-1.5 text-xs">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONVERT APPLICANT TO ENROLLED STUDENT MODAL -->
+  <div id="convertApplicantModal" class="hidden crm-modal-backdrop fixed inset-0 bg-slate-900/50 backdrop-blur-[1px] z-50 flex items-center justify-center p-4" onclick="closeOnBackdropClick(event, closeConvertApplicantModal)">
+    <div class="w-full max-w-lg crm-card p-6 space-y-4 text-xs">
+      <div class="flex items-center justify-between pb-3 border-b crm-border">
+        <div>
+          <h3 class="text-base font-semibold text-main">Convert Applicant to Student</h3>
+          <p class="text-xs text-sub mt-0.5">Admissions Pipeline → Student Directory &amp; Class Roster.</p>
+        </div>
+        <button onclick="closeConvertApplicantModal()" class="text-sub hover:text-main">✕</button>
+      </div>
+
+      <div class="p-3 rounded-lg crm-subtle border crm-border space-y-1.5">
+        <div class="flex justify-between"><span class="text-sub">Applicant Name:</span><span id="convertApplicantName" class="font-semibold text-main">Victoria Cooper</span></div>
+        <div class="flex justify-between"><span class="text-sub">Application ID:</span><span id="convertApplicantId" class="text-body font-medium">APP-104</span></div>
+        <div class="flex justify-between"><span class="text-sub">Placement Test Score:</span><span class="font-semibold text-emerald-600 dark:text-emerald-400 num-tabular">89% (Passed)</span></div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-medium text-body mb-1">Assigned Student ID</label>
+          <input type="text" id="convertStudentId" value="STU-112" class="crm-input w-full px-3 py-1.5 text-xs font-semibold" />
+        </div>
+        <div>
+          <label class="block font-medium text-body mb-1">Campus</label>
+          <select id="convertCampus" class="crm-input w-full px-3 py-1.5 text-xs">
+            <option value="Sinkor" selected>Sinkor Campus</option>
+            <option value="Paynesville">Paynesville Campus</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-medium text-body mb-1">Division &amp; Grade</label>
+          <select id="convertGrade" class="crm-input w-full px-3 py-1.5 text-xs">
+            <option value="Grade 7" selected>Junior High · Grade 7</option>
+            <option value="Grade 8">Junior High · Grade 8</option>
+            <option value="Grade 9">Junior High · Grade 9 (WAEC)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-medium text-body mb-1">Class Section</label>
+          <select id="convertSection" class="crm-input w-full px-3 py-1.5 text-xs">
+            <option value="Grade 7A" selected>Grade 7A (Room 15)</option>
+            <option value="Grade 7B">Grade 7B (Room 16)</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block font-medium text-body mb-1">Tuition Fee Schedule Assignment</label>
+        <div class="p-2.5 rounded crm-subtle border crm-border flex justify-between items-center text-xs">
+          <span>Junior High Standard Academic Tuition (2026/27)</span>
+          <span class="font-bold text-main num-tabular">LRD 85,000.00 / yr</span>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeConvertApplicantModal()" class="btn-secondary px-3 py-1.5 text-xs">Cancel</button>
+        <button onclick="executeApplicantConversion()" class="btn-primary px-4 py-1.5 text-xs font-semibold">
+          Complete Enrollment &amp; Generate ID
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARENT INQUIRY SUBMISSION MODAL -->
+  <div id="parentInquiryModal" class="hidden crm-modal-backdrop fixed inset-0 bg-slate-900/50 backdrop-blur-[1px] z-50 flex items-center justify-center p-4" onclick="closeOnBackdropClick(event, closeParentInquiryModal)">
+    <div class="w-full max-w-md crm-card p-6 space-y-4 text-xs">
+      <div class="flex items-center justify-between pb-3 border-b crm-border">
+        <div>
+          <h3 class="text-base font-semibold text-main">Submit Guardian Inquiry</h3>
+          <p class="text-xs text-sub mt-0.5">Direct inquiry to Gojo Institute Administration or Teachers.</p>
+        </div>
+        <button onclick="closeParentInquiryModal()" class="text-sub hover:text-main">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block font-medium text-body mb-1">Target Department / Recipient</label>
+          <select id="inquiryRecipient" class="crm-input w-full px-3 py-1.5 text-xs">
+            <option>Homeroom Teacher (Grace Johnson · G6A)</option>
+            <option>Principal's Office (Dr. Samuel Kollie)</option>
+            <option>Registrar (Beatrice Toe)</option>
+            <option>Bursar / Tuition Office (Joseph Freeman)</option>
+            <option>Transportation &amp; Bus Coordinator</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-medium text-body mb-1">Subject</label>
+          <input type="text" id="inquirySubject" placeholder="e.g., Bus Route 3 Pickup Query or Fee Receipt Inquiry" class="crm-input w-full px-3 py-2 text-xs" />
+        </div>
+
+        <div>
+          <label class="block font-medium text-body mb-1">Message</label>
+          <textarea id="inquiryBody" rows="4" placeholder="Type your inquiry message here..." class="crm-input w-full p-2.5 text-xs"></textarea>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeParentInquiryModal()" class="btn-secondary px-3 py-1.5 text-xs">Cancel</button>
+        <button onclick="submitParentInquiry()" class="btn-primary px-4 py-1.5 text-xs font-semibold">
+          Submit Inquiry Note
+        </button>
+      </div>
     </div>
   </div>
 
@@ -3182,11 +4270,11 @@
         { id: 'RCP-906', feeId: 'FEE-206', studentName: 'Esther Varney', method: 'Orange Money Liberia', date: '2026-11-20', amount: 62000, voided: false }
       ],
       teachers: [
-        { id: 'STF-101', name: 'Dr. Samuel Kollie', dept: 'Administration', role: 'Principal', homeroom: 'Campus-Wide', phone: '+231 77 555 0001', status: 'Active' },
+        { id: 'STF-101', name: 'Dr. Samuel Kollie', dept: '', role: 'Principal', homeroom: 'Campus-Wide', phone: '+231 77 555 0001', status: 'Active' },
         { id: 'STF-102', name: 'Grace Johnson', dept: 'Elementary', role: 'Grade 6 Lead Teacher', homeroom: 'Grade 6A', phone: '+231 88 655 0012', status: 'Active' },
-        { id: 'STF-103', name: 'Aaron Cooper', dept: 'Mathematics & Sciences', role: 'Senior Math & Physics', homeroom: 'Grade 12A', phone: '+231 77 555 0019', status: 'Active' },
+        { id: 'STF-103', name: 'Aaron Cooper', dept: 'Senior High', role: 'Senior Math & Physics', homeroom: 'Grade 12A', phone: '+231 77 555 0019', status: 'Active' },
         { id: 'STF-104', name: 'Victoria Weah', dept: 'Early Childhood', role: 'Nursery & KG Lead', homeroom: 'Nursery A', phone: '+231 88 655 0024', status: 'Active' },
-        { id: 'STF-105', name: 'Thomas Barchue', dept: 'Humanities & Languages', role: 'English & Liberian History', homeroom: 'Grade 9A', phone: '+231 77 555 0031', status: 'Active' }
+        { id: 'STF-105', name: 'Thomas Barchue', dept: 'Junior High', role: 'English & Liberian History', homeroom: 'Grade 9A', phone: '+231 77 555 0031', status: 'Active' }
       ],
       books: [
         { id: 'LIB-01', title: 'WASSCE Core Mathematics Past Questions', author: 'WAEC Liberia Press', division: 'Senior High', total: 40, issued: 28 },
@@ -4746,7 +5834,7 @@
       state.activeTab = tabId;
       closeEveryInspector();
       document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
-      ['dashboard','students','admissions','classes','attendance','grades','fees','teachers','parents','library','transport','announcements','settings'].forEach(id => {
+      ['dashboard','students','admissions','classes','attendance','grades','fees','teachers','parents','library','transport','announcements','settings','portal-parent','portal-student','auth-showcase'].forEach(id => {
         document.getElementById('pane-' + id)?.classList.toggle('hidden', id !== tabId);
       });
       const titles = {
@@ -4756,6 +5844,7 @@
         library: 'Library & Textbooks', transport: 'School Bus Routes', announcements: 'Announcements & SMS', settings: 'School Settings'
       };
       document.getElementById('headerBreadcrumb').textContent = titles[tabId] || 'Campus';
+      syncHashWithView('pane-' + tabId);
       if (tabId === 'dashboard') renderDashboardAll();
       if (tabId === 'students') renderStudentsAll();
       if (tabId === 'admissions') renderAdmissionsAll();
@@ -4773,6 +5862,18 @@
     }
 
     function handleRoleChange(newRole) {
+      if (newRole === 'Parent') {
+        handleViewContextChange('parent:Helena');
+        return;
+      }
+      if (newRole === 'Student') {
+        handleViewContextChange('student:Ezekiel');
+        return;
+      }
+      if (newRole === 'Auth') {
+        handleViewContextChange('auth:showcase');
+        return;
+      }
       state.activeRole = newRole;
       const badge = document.getElementById('roleLensBadge');
       const initials = document.getElementById('compactRoleInitials');
@@ -5570,7 +6671,7 @@
     function closeNewStaffModal() { document.getElementById('newStaffModal').classList.add('hidden'); }
     function createNewStaff() {
       const name = document.getElementById('newStaffName').value.trim(); if (!name) return;
-      state.teachers.unshift({ id: 'STF-' + (101 + state.teachers.length), name, dept: document.getElementById('newStaffDept').value, role: document.getElementById('newStaffRole').value.trim() || 'Teacher', homeroom: 'Assigned TBD', phone: document.getElementById('newStaffPhone').value.trim() || '+231 77 555 0099', status: 'Active' });
+      state.teachers.unshift({ id: 'STF-' + (101 + state.teachers.length), name, dept: document.getElementById('newStaffDept').value, role: document.getElementById('newStaffRole').value.trim() || 'Teacher', homeroom: 'Assigned TBD', phone: document.getElementById('newStaffPhone').value.trim() || '+231 77 555 0099', email: document.getElementById('newStaffEmail').value.trim() || 'staff@gojo.test', status: 'Active' });
       closeNewStaffModal(); renderTeachersAll(); showToast('Added ' + name + ' to faculty.', { tone: 'success' });
     }
 
@@ -5622,7 +6723,7 @@
     function closeNewParentModal() { document.getElementById('newParentModal').classList.add('hidden'); }
     function createNewParent() {
       const name = document.getElementById('newParName').value.trim(); if (!name) return;
-      state.parents.unshift({ id: 'PAR-' + (101 + state.parents.length), name, phone: document.getElementById('newParPhone').value.trim() || '+231 77 555 0199', zone: document.getElementById('newParZone').value.trim() || 'Sinkor, Monrovia', sms: 'on' });
+      state.parents.unshift({ id: 'PAR-' + (101 + state.parents.length), name, phone: document.getElementById('newParPhone').value.trim() || '+231 77 555 0199', zone: document.getElementById('newParZone').value.trim() || 'Sinkor, Monrovia', email: document.getElementById('newParEmail').value.trim() || 'guardian@gojo.test', sms: 'on' });
       closeNewParentModal(); renderParentsAll(); showToast('Added guardian ' + name + '.', { tone: 'success' });
     }
 
@@ -5861,15 +6962,544 @@
     mountThemePopover();
     bindTooltips();
 
+    function syncHashWithView(hash) {
+      if ((window.location.hash || '').replace(/^#/, '') !== hash) {
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', '#' + hash);
+        }
+      }
+    }
+
+    function handleUrlHashRoute() {
+      const rawHash = (window.location.hash || '').replace(/^#/, '').trim();
+      if (!rawHash) return false;
+
+      const cleanKey = rawHash.replace(/^pane-/, '');
+
+      if (cleanKey === 'auth' || cleanKey === 'auth-showcase') {
+        handleViewContextChange('auth:showcase');
+        return true;
+      }
+      if (cleanKey === 'parent' || cleanKey === 'portal-parent') {
+        handleViewContextChange('parent:Helena');
+        return true;
+      }
+      if (cleanKey === 'student' || cleanKey === 'portal-student') {
+        handleViewContextChange('student:Ezekiel');
+        return true;
+      }
+
+      const validTabs = ['dashboard','students','admissions','classes','attendance','grades','fees','teachers','parents','library','transport','announcements','settings'];
+      if (validTabs.includes(cleanKey)) {
+        if (typeof state !== 'undefined' && state.activeContext !== 'staff') {
+          handleViewContextChange('staff:Principal');
+        }
+        switchTab(cleanKey);
+        return true;
+      }
+
+      return false;
+    }
+
     window.onload = function () {
       setThemeMode('light');
-      switchTab('dashboard');
       renderUiKitFileChips();
       initCustomSelectListeners();
       enhanceAllCustomControls();
       mountGlobalSearchResults();
       mountThemePopover();
+
+      const routed = handleUrlHashRoute();
+      if (!routed) {
+        switchTab('dashboard');
+      }
+
+      window.addEventListener('hashchange', handleUrlHashRoute);
     };
+
+    /* ==========================================================================
+       EXTENDED WORKSPACE PERSPECTIVES, OFFLINE ENGINE & PAYMENT FLOWS
+       ========================================================================== */
+    state.activeContext = 'staff';
+    state.activeChildId = 'STU-101';
+    state.networkStatus = 'online';
+    state.momoActiveCarrier = 'mtn';
+
+    // Extend roleMeta
+    const extendedRoleMeta = {
+      Principal: { badge: 'Full Campus', init: 'SK', greet: 'Good morning, Dr. Kollie', label: 'Dr. Samuel Kollie (Principal)' },
+      Registrar: { badge: 'Registrar Lens', init: 'BT', greet: 'Good morning, Beatrice Toe', label: 'Beatrice Toe (Registrar)' },
+      Bursar: { badge: 'Bursar Finance', init: 'JF', greet: 'Good morning, Joseph Freeman', label: 'Joseph Freeman (Bursar)' },
+      Teacher: { badge: 'G6A Homeroom', init: 'GJ', greet: 'Good morning, Grace Johnson', label: 'Grace Johnson (Teacher · G6A)' },
+      Parent: { badge: 'Parent Portal', init: 'HK', greet: 'Welcome, Helena Kollie', label: 'Helena Kollie (Parent Portal)' },
+      Student: { badge: 'Student Portal', init: 'EK', greet: 'Welcome back, Ezekiel', label: 'Ezekiel Kollie (Student Portal)' },
+      Auth: { badge: 'Public Auth', init: 'GI', greet: 'Gojo Institute Authentication', label: 'Public Auth Showcase' }
+    };
+
+    function handleViewContextChange(val) {
+      const parts = val.split(':');
+      const context = parts[0];
+      const roleOrTarget = parts[1];
+
+      state.activeContext = context;
+
+      const topbarSel = document.getElementById('topbarViewSelector');
+      if (topbarSel) topbarSel.value = val;
+
+      const sidebarRoleSel = document.getElementById('roleSelector');
+      const staffSidebar = document.getElementById('sidebar');
+
+      if (context === 'staff') {
+        if (staffSidebar) staffSidebar.classList.remove('hidden');
+        if (sidebarRoleSel) sidebarRoleSel.value = roleOrTarget;
+        handleRoleChange(roleOrTarget);
+        switchTab('dashboard');
+      } else if (context === 'parent') {
+        if (staffSidebar) staffSidebar.classList.remove('hidden');
+        if (sidebarRoleSel) sidebarRoleSel.value = 'Parent';
+        switchViewToParentPortal();
+      } else if (context === 'student') {
+        if (staffSidebar) staffSidebar.classList.remove('hidden');
+        if (sidebarRoleSel) sidebarRoleSel.value = 'Student';
+        switchViewToStudentPortal();
+      } else if (context === 'auth') {
+        if (staffSidebar) staffSidebar.classList.add('hidden');
+        if (sidebarRoleSel) sidebarRoleSel.value = 'Auth';
+        switchViewToAuthShowcase();
+      }
+    }
+
+    function switchViewToParentPortal() {
+      state.activeRole = 'Parent';
+      hideAllPanes();
+      document.getElementById('pane-portal-parent')?.classList.remove('hidden');
+      document.getElementById('headerBreadcrumb').textContent = 'Parent & Guardian Portal';
+      syncHashWithView('pane-portal-parent');
+      updateCompactRoleInitials('HK');
+      showToast('Switched to Parent Portal (Helena Kollie).', { tone: 'info' });
+    }
+
+    function switchViewToStudentPortal() {
+      state.activeRole = 'Student';
+      hideAllPanes();
+      document.getElementById('pane-portal-student')?.classList.remove('hidden');
+      document.getElementById('headerBreadcrumb').textContent = 'Student Portal (Ezekiel Kollie)';
+      syncHashWithView('pane-portal-student');
+      updateCompactRoleInitials('EK');
+      showToast('Switched to Student Portal (Ezekiel Kollie).', { tone: 'info' });
+    }
+
+    function switchViewToAuthShowcase() {
+      state.activeRole = 'Auth';
+      state.activeContext = 'auth';
+      document.getElementById('pane-auth-showcase')?.classList.remove('hidden');
+      syncHashWithView('pane-auth-showcase');
+    }
+
+    function hideAllPanes() {
+      ['dashboard','students','admissions','classes','attendance','grades','fees','teachers','parents','library','transport','announcements','settings','portal-parent','portal-student','auth-showcase'].forEach(id => {
+        document.getElementById('pane-' + id)?.classList.add('hidden');
+      });
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.getElementById('pane-auth-showcase')?.classList.add('hidden');
+    }
+
+    function updateCompactRoleInitials(init) {
+      const el = document.getElementById('compactRoleInitials');
+      if (el) el.textContent = init;
+    }
+
+    /* PARENT PORTAL CONTROLS */
+    function switchParentChild(childId) {
+      state.activeChildId = childId;
+      const isEzekiel = childId === 'STU-101';
+
+      const btnE = document.getElementById('btnChildEzekiel');
+      const btnB = document.getElementById('btnChildBlessing');
+
+      if (isEzekiel) {
+        btnE.className = 'px-3 py-1.5 rounded-md text-xs font-semibold bg-white dark:bg-zinc-700 text-main shadow-sm border crm-border transition-all';
+        btnB.className = 'px-3 py-1.5 rounded-md text-xs font-medium text-sub hover:text-main transition-all';
+        document.getElementById('parentChildAttendanceRate').textContent = '96.4%';
+        document.getElementById('parentChildAcademicRank').textContent = 'Honor Roll (88.6%)';
+        document.getElementById('parentChildFeeBalance').textContent = 'LRD 18,500.00';
+      } else {
+        btnB.className = 'px-3 py-1.5 rounded-md text-xs font-semibold bg-white dark:bg-zinc-700 text-main shadow-sm border crm-border transition-all';
+        btnE.className = 'px-3 py-1.5 rounded-md text-xs font-medium text-sub hover:text-main transition-all';
+        document.getElementById('parentChildAttendanceRate').textContent = '98.1%';
+        document.getElementById('parentChildAcademicRank').textContent = 'First Honors (92.4%)';
+        document.getElementById('parentChildFeeBalance').textContent = 'LRD 0.00 (Cleared)';
+      }
+      showToast('Viewing guardian records for ' + (isEzekiel ? 'Ezekiel' : 'Blessing') + ' Kollie.', { tone: 'info' });
+    }
+
+    function switchParentSubtab(subtabKey) {
+      ['overview','grades','fees','notices'].forEach(k => {
+        const pane = document.getElementById('parentSubtab' + k.charAt(0).toUpperCase() + k.slice(1));
+        if (pane) pane.classList.toggle('hidden', k !== subtabKey);
+      });
+      document.querySelectorAll('#parentSubtabsBar .subtab').forEach(b => {
+        b.classList.toggle('active', b.dataset.subtab === subtabKey);
+      });
+    }
+
+    /* STUDENT PORTAL CONTROLS */
+    function switchStudentSubtab(subtabKey) {
+      ['schedule','grades','library'].forEach(k => {
+        const pane = document.getElementById('studentSubtab' + k.charAt(0).toUpperCase() + k.slice(1));
+        if (pane) pane.classList.toggle('hidden', k !== subtabKey);
+      });
+      document.querySelectorAll('#studentSubtabsBar .subtab').forEach(b => {
+        b.classList.toggle('active', b.dataset.subtab === subtabKey);
+      });
+    }
+
+    /* AUTH SHOWCASE CONTROLS */
+    function switchAuthSubScreen(screenKey) {
+      document.getElementById('authSubSignIn').classList.toggle('hidden', screenKey !== 'signin');
+      document.getElementById('authSubForgot').classList.toggle('hidden', screenKey !== 'forgot');
+      document.getElementById('authSubInvite').classList.toggle('hidden', screenKey !== 'invite');
+
+      const tabs = { signin: 'authTabSignIn', forgot: 'authTabForgot', invite: 'authTabInvite' };
+      Object.keys(tabs).forEach(k => {
+        const btn = document.getElementById(tabs[k]);
+        if (btn) {
+          if (k === screenKey) {
+            btn.className = 'px-3 py-1 rounded text-xs font-semibold bg-white dark:bg-zinc-700 text-main shadow-sm';
+          } else {
+            btn.className = 'px-3 py-1 rounded text-xs font-medium text-sub hover:text-main';
+          }
+        }
+      });
+    }
+
+    function simulateSendOtp() {
+      document.getElementById('otpInputSection').classList.remove('hidden');
+      showToast('6-Digit OTP code dispatched to registered mobile.', { tone: 'success' });
+    }
+
+    function simulateCompletePasswordReset() {
+      showToast('Password updated securely. Signing in...', { tone: 'success' });
+      setTimeout(() => {
+        handleViewContextChange('staff:Principal');
+      }, 700);
+    }
+
+    function handleAuthSignInSuccess() {
+      showToast('Authentication verified. Welcome to Gojo Institute.', { tone: 'success' });
+      setTimeout(() => {
+        handleViewContextChange('staff:Principal');
+      }, 500);
+    }
+
+    /* PWA OFFLINE & SYNC OUTBOX DRAWER */
+    function toggleSyncOutboxDrawer() {
+      const drawer = document.getElementById('syncOutboxDrawerBackdrop');
+      drawer.classList.toggle('hidden');
+    }
+
+    function toggleOfflineSimulator() {
+      const isOffline = state.networkStatus === 'offline';
+      state.networkStatus = isOffline ? 'online' : 'offline';
+
+      const dot = document.getElementById('networkStatusDot');
+      const label = document.getElementById('networkStatusLabel');
+      const badge = document.getElementById('networkOutboxCountBadge');
+      const simBadge = document.getElementById('simulatorStatusBadge');
+      const simBtn = document.getElementById('toggleOfflineBtn');
+
+      if (state.networkStatus === 'offline') {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
+        label.textContent = 'Offline · 2 Pending';
+        badge.classList.remove('hidden');
+        badge.textContent = '2';
+        simBadge.className = 'badge badge-warn text-[10px]';
+        simBadge.textContent = 'Offline (Simulated)';
+        simBtn.textContent = 'Reconnect Network';
+        showToast('Network disconnected. Workbox caching offline mutations.', { tone: 'warn' });
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        label.textContent = 'Online · Synced';
+        badge.classList.add('hidden');
+        simBadge.className = 'badge badge-success text-[10px]';
+        simBadge.textContent = 'Online';
+        simBtn.textContent = 'Simulate Network Disconnect';
+        showToast('Network restored. IndexedDB outbox synced.', { tone: 'success' });
+      }
+    }
+
+    function simulateConflict() {
+      state.networkStatus = 'conflict';
+      const dot = document.getElementById('networkStatusDot');
+      const label = document.getElementById('networkStatusLabel');
+      dot.className = 'w-2 h-2 rounded-full bg-rose-500 animate-pulse';
+      label.textContent = 'Sync Conflict!';
+
+      document.getElementById('conflictResolutionBox').classList.remove('hidden');
+      document.getElementById('syncOutboxDrawerBackdrop').classList.remove('hidden');
+      showToast('409 Conflict detected on student score mutation.', { tone: 'danger' });
+    }
+
+    function resolveConflict(resolution) {
+      document.getElementById('conflictResolutionBox').classList.add('hidden');
+      state.networkStatus = 'online';
+
+      const dot = document.getElementById('networkStatusDot');
+      const label = document.getElementById('networkStatusLabel');
+      dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+      label.textContent = 'Online · Synced';
+
+      const msgs = {
+        server: 'Resolved: Accepted server version (94%). Local mutation discarded.',
+        mine: 'Resolved: Forced local version (88%). Server database updated.',
+        merge: 'Resolved: Merged score calculated (91%). Synced to all records.'
+      };
+      showToast(msgs[resolution], { tone: 'success' });
+    }
+
+    function syncAllPending() {
+      const list = document.getElementById('drawerOutboxQueueList');
+      list.innerHTML = '<div class="p-3 text-center text-xs text-sub">No pending mutations in outbox. Everything synced!</div>';
+      document.getElementById('drawerQueueCountBadge').textContent = '0 pending';
+      document.getElementById('networkOutboxCountBadge').classList.add('hidden');
+      state.networkStatus = 'online';
+      document.getElementById('networkStatusDot').className = 'w-2 h-2 rounded-full bg-emerald-500';
+      document.getElementById('networkStatusLabel').textContent = 'Online · Synced';
+      showToast('All 2 queued mutations synced to backend successfully.', { tone: 'success' });
+    }
+
+    /* LIBERIAN MOBILE MONEY (MOMO & ORANGE) CHECKOUT FLOW */
+    function openMomoCheckout(invoiceId, studentId, amount) {
+      document.getElementById('momoStep1').classList.remove('hidden');
+      document.getElementById('momoStep2').classList.add('hidden');
+      document.getElementById('momoStep3').classList.add('hidden');
+
+      document.getElementById('momoInvoiceId').textContent = invoiceId || 'INV-2026-6A04';
+      document.getElementById('momoAmountDisplay').textContent = formatLRD(amount || 18500);
+
+      document.getElementById('momoCheckoutModal').classList.remove('hidden');
+    }
+
+    function closeMomoCheckout() {
+      document.getElementById('momoCheckoutModal').classList.add('hidden');
+    }
+
+    function selectMomoCarrier(carrier) {
+      state.momoActiveCarrier = carrier;
+      const mtnBtn = document.getElementById('carrierBtnMtn');
+      const orangeBtn = document.getElementById('carrierBtnOrange');
+
+      if (carrier === 'mtn') {
+        mtnBtn.className = 'p-3 rounded-lg border-2 border-amber-500 bg-amber-50/40 dark:bg-amber-950/20 text-left transition-all';
+        orangeBtn.className = 'p-3 rounded-lg border crm-border text-left hover:border-orange-500 transition-all';
+        document.getElementById('momoPhoneInput').value = '+231 88 555 1234';
+      } else {
+        orangeBtn.className = 'p-3 rounded-lg border-2 border-orange-500 bg-orange-50/40 dark:bg-orange-950/20 text-left transition-all';
+        mtnBtn.className = 'p-3 rounded-lg border crm-border text-left hover:border-amber-500 transition-all';
+        document.getElementById('momoPhoneInput').value = '+231 77 444 8888';
+      }
+    }
+
+    function initiateMomoPush() {
+      document.getElementById('momoStep1').classList.add('hidden');
+      document.getElementById('momoStep2').classList.remove('hidden');
+      document.getElementById('momoTargetPhone').textContent = document.getElementById('momoPhoneInput').value;
+    }
+
+    function simulateMomoApproval() {
+      document.getElementById('momoStep2').classList.add('hidden');
+      document.getElementById('momoStep3').classList.remove('hidden');
+
+      const rcpNum = 'RCP-' + (907 + state.payments.length);
+      document.getElementById('momoReceiptId').textContent = rcpNum;
+      document.getElementById('momoMethodLabel').textContent = state.momoActiveCarrier === 'mtn' ? 'Lonestar MTN MoMo' : 'Orange Money Liberia';
+
+      // Record in mock state
+      state.payments.unshift({
+        id: rcpNum,
+        feeId: 'FEE-204',
+        studentName: 'Ezekiel Kollie',
+        method: state.momoActiveCarrier === 'mtn' ? 'MoMo' : 'Orange Money Liberia',
+        date: '2026-11-25',
+        amount: 18500,
+        voided: false
+      });
+
+      // Update parent portal balances if visible
+      const balEl = document.getElementById('parentInvoiceBalanceAmount');
+      if (balEl) balEl.textContent = 'LRD 0.00';
+      const statEl = document.getElementById('parentInvoiceStatusBadge');
+      if (statEl) {
+        statEl.className = 'badge badge-success text-xs';
+        statEl.textContent = 'Paid in Full';
+      }
+      const payBtn = document.getElementById('parentPayMomoBtn');
+      if (payBtn) payBtn.classList.add('hidden');
+
+      writeAudit(currentActorName(), state.activeRole, 'Ezekiel Kollie', 'Mobile Money payment ' + rcpNum + ' of LRD 18,500 settled.');
+      renderFeesAll();
+      showToast('Payment settled via ' + (state.momoActiveCarrier === 'mtn' ? 'MTN MoMo' : 'Orange Money') + '.', { tone: 'success' });
+    }
+
+    /* ADMISSIONS TO STUDENT CONVERSION WIZARD */
+    function openConvertApplicantModal(applicantId) {
+      const app = state.applicants.find(a => a.id === applicantId) || { id: 'APP-104', name: 'Victoria Cooper', grade: 'Grade 7' };
+      document.getElementById('convertApplicantName').textContent = app.name;
+      document.getElementById('convertApplicantId').textContent = app.id;
+      document.getElementById('convertApplicantModal').classList.remove('hidden');
+    }
+
+    function closeConvertApplicantModal() {
+      document.getElementById('convertApplicantModal').classList.add('hidden');
+    }
+
+    function executeApplicantConversion() {
+      const stuId = document.getElementById('convertStudentId').value || 'STU-112';
+      const appName = document.getElementById('convertApplicantName').textContent;
+      const grade = document.getElementById('convertGrade').value;
+      const section = document.getElementById('convertSection').value;
+      const campus = document.getElementById('convertCampus').value;
+
+      // Add to state.students
+      state.students.unshift({
+        id: stuId,
+        name: appName,
+        division: 'Junior High',
+        grade: section,
+        campus: campus,
+        status: 'Active',
+        attendance: 100,
+        gpa: 3.5,
+        guardianName: 'Moses Cooper',
+        guardianPhone: '+231 77 444 8888',
+        conduct: 'Excellent',
+        notes: []
+      });
+
+      // Update applicant stage
+      const app = state.applicants.find(a => a.name === appName);
+      if (app) app.stage = 'Enrolled';
+
+      writeAudit(currentActorName(), state.activeRole, appName, 'Converted applicant to student ' + stuId + ' (' + section + ').');
+      closeConvertApplicantModal();
+      renderAdmissionsAll();
+      renderStudentsAll();
+      renderDashboardAll();
+      showToast('Enrolled ' + appName + ' as ' + stuId + ' into ' + section + '.', { tone: 'success' });
+    }
+
+    /* PARENT INQUIRY MODAL */
+    function openParentInquiryModal(target) {
+      if (target) {
+        const sel = document.getElementById('inquiryRecipient');
+        if (sel) sel.value = target;
+      }
+      document.getElementById('parentInquiryModal').classList.remove('hidden');
+    }
+
+    function closeParentInquiryModal() {
+      document.getElementById('parentInquiryModal').classList.add('hidden');
+    }
+
+    function submitParentInquiry() {
+      const subject = document.getElementById('inquirySubject').value;
+      if (!subject) {
+        showToast('Please provide an inquiry subject.', { tone: 'warn' });
+        return;
+      }
+      writeAudit('Helena Kollie', 'Parent', 'Gojo Administration', 'Parent Inquiry submitted: ' + subject);
+      closeParentInquiryModal();
+      showToast('Inquiry submitted to campus administration. Ticket #INQ-402 created.', { tone: 'success' });
+    }
+
+    /* RESET PROTOTYPE DATA */
+    function resetPrototypeData() {
+      state.networkStatus = 'online';
+      state.activeContext = 'staff';
+      state.activeRole = 'Principal';
+      state.activeChildId = 'STU-101';
+      document.getElementById('networkStatusDot').className = 'w-2 h-2 rounded-full bg-emerald-500';
+      document.getElementById('networkStatusLabel').textContent = 'Online · Synced';
+      document.getElementById('networkOutboxCountBadge').classList.add('hidden');
+      handleViewContextChange('staff:Principal');
+      showToast('Prototype state restored to default factory sample data.', { tone: 'info' });
+    }
+
+
+    function togglePasswordVisibility(inputId, btnEl) {
+      const inp = document.getElementById(inputId);
+      if (!inp) return;
+      const isPwd = inp.type === 'password';
+      inp.type = isPwd ? 'text' : 'password';
+      if (btnEl) btnEl.textContent = isPwd ? 'Hide' : 'Show';
+    }
+
+    function quickFillAndLogin(role) {
+      const emails = {
+        Principal: 'skollie@gojo.edu.lr',
+        Registrar: 'btoe@gojo.edu.lr',
+        Bursar: 'jfreeman@gojo.edu.lr',
+        Teacher: 'gjohnson@gojo.edu.lr',
+        Parent: 'hkollie@gojo.edu.lr',
+        Student: 'ekollie@gojo.edu.lr'
+      };
+      const inp = document.getElementById('authLoginIdentifier');
+      if (inp) inp.value = emails[role] || 'skollie@gojo.edu.lr';
+
+      document.getElementById('pane-auth-showcase')?.classList.add('hidden');
+
+      if (role === 'Parent') {
+        handleViewContextChange('parent:Helena');
+      } else if (role === 'Student') {
+        handleViewContextChange('student:Ezekiel');
+      } else {
+        handleViewContextChange('staff:' + role);
+      }
+      showToast('Signed in as ' + role + '. Welcome to Gojo Institute.', { tone: 'success' });
+    }
+
+
+    /* LIVE HOLO CARD PREVIEW ON AUTH PAGE */
+    function previewHoloCard(role) {
+      const card = document.getElementById('authHoloCard');
+      const nameEl = document.getElementById('authCardPreviewName');
+      const roleEl = document.getElementById('authCardPreviewRole');
+      const idEl = document.getElementById('authCardPreviewId');
+      const avatarEl = document.getElementById('authCardAvatar');
+      const campusEl = document.getElementById('authCardCampusLabel');
+
+      const meta = {
+        Principal: { name: 'Dr. Samuel Kollie', role: 'Principal · Campus Executive', id: 'ID: STF-101 · LEVEL 5 ACCESS', init: 'SK', campus: 'Sinkor Campus' },
+        Registrar: { name: 'Beatrice Toe', role: 'Registrar · Admissions & Records', id: 'ID: STF-102 · LEVEL 4 ACCESS', init: 'BT', campus: 'Sinkor Campus' },
+        Bursar: { name: 'Joseph Freeman', role: 'Bursar · Tuition & Mobile Money', id: 'ID: STF-103 · LEVEL 4 ACCESS', init: 'JF', campus: 'Sinkor Campus' },
+        Teacher: { name: 'Grace Johnson', role: 'Teacher · Grade 6A Homeroom', id: 'ID: STF-104 · LEVEL 3 ACCESS', init: 'GJ', campus: 'Sinkor Campus' },
+        Parent: { name: 'Helena Kollie', role: 'Guardian · 2 Linked Students', id: 'ID: PAR-501 · GUARDIAN PORTAL', init: 'HK', campus: 'Sinkor & Paynesville' },
+        Student: { name: 'Ezekiel Kollie', role: 'Student · Grade 6A Primary', id: 'ID: STU-101 · STUDENT PORTAL', init: 'EK', campus: 'Sinkor Campus' }
+      }[role];
+
+      if (!meta) return;
+      if (nameEl) nameEl.textContent = meta.name;
+      if (roleEl) roleEl.textContent = meta.role;
+      if (idEl) idEl.textContent = meta.id;
+      if (avatarEl) avatarEl.textContent = meta.init;
+      if (campusEl) campusEl.textContent = meta.campus;
+
+      if (card) {
+        card.style.transform = 'translateY(-2px)';
+        setTimeout(() => { if (card) card.style.transform = 'translateY(0)'; }, 200);
+      }
+    }
+
+    function handleAuthIdentifierInput(val) {
+      const v = (val || '').toLowerCase();
+      if (v.includes('toe') || v.includes('btoe')) previewHoloCard('Registrar');
+      else if (v.includes('freeman') || v.includes('jfreeman')) previewHoloCard('Bursar');
+      else if (v.includes('johnson') || v.includes('gjohnson')) previewHoloCard('Teacher');
+      else if (v.includes('helena') || v.includes('hkollie')) previewHoloCard('Parent');
+      else if (v.includes('ezekiel') || v.includes('ekollie')) previewHoloCard('Student');
+      else previewHoloCard('Principal');
+    }
+
   </script>
 </body>
 </html>
