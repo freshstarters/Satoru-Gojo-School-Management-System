@@ -21,7 +21,9 @@ Statuses: `active`, `honor_roll`, `at_risk`, `withdrawn`, `graduated`. WAEC cand
 
 Withdraw sets status to `withdrawn`, clears `current_classroom`, and snapshots `last_homeroom_teacher` from the previous homeroom.
 
-Guardian links, fee invoices, attendance %, yearly average, exam clearance, and LRD balance are not part of this screen yet. Those fields return `null` and the UI shows `—`.
+The directory shows the primary guardian's name and phone. Enroll and the profile inspector can set `primary_guardian_id`. An existing link becomes the only primary. A guardian who is not yet linked is linked as relationship `guardian` and set primary. An empty value clears the primary flag and leaves the other links in place.
+
+Attendance %, yearly average, exam clearance, and LRD balance are not part of this screen yet. Those fields return `null` and the UI shows `—`. The summary cards Visible Students, Honor Roll (≥85%), At Risk (<70%), and Exam Cleared follow that rule: only the visible-student count is live, and the other three stay `—` until yearly averages and invoices exist.
 
 ## Filters and summary
 

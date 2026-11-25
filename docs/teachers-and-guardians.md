@@ -18,6 +18,8 @@ A parent account may read and patch only their own guardian profile through the 
 
 `POST /api/demo/v1/teachers/` creates a staff profile. The server allocates a unique `STF-YYYY-NNNN` code. Fields: full name, portal role (`principal`, `registrar`, `bursar`, `teacher`, `support_staff`), optional job title, optional school division (Early Childhood, Elementary, Junior High, Senior High), optional campus, qualifications, required `+231` phone, required email, employment status.
 
+The staff backfill leaves the phone blank when the account has no phone, and clears a shared placeholder from rows it already created. The directory shows an em dash for a blank phone. Creating a staff profile through the API still requires a real `+231` phone.
+
 Homerooms and subject assignments are read from Classes & Timetable (`Classroom.homeroom_teacher` and `ClassSubjectAssignment`). The Assignments inspector tab is read-only.
 
 Soft-deactivation sets employment to `inactive` and disables the linked login when one exists. Timetable, homeroom, and subject rows keep their teacher user FK. Reactivate restores employment and turns the login back on only when that user already has a usable password. Inactive staff stay in the directory.

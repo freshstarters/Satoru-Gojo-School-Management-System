@@ -185,8 +185,12 @@
   - `demo/service/dashboard_service.py` & `GET /api/demo/v1/dashboard/`: Returns role-scoped KPIs (active enrollment, today's attendance %, tuition collected & outstanding LRD/USD, open admissions, WAEC ready count), combo chart series (`sem1`, `all` P1–P6, `waec`), cashflow totals (`week`, `month`, `term`) by payment method, actionable Principal alerts (uncovered bell slots, WAEC unpaid fees, clearance holds), catchment zone distribution, and latest audit headline.
   - `GET /api/demo/v1/search/?q=...`: Role-scoped PostgreSQL search across students, guardians, receipts, classes, staff, and library books.
   - Wire `DashboardScreen` (KPI cards, interactive combo chart with `Sem 1 / P1–P6 / WAEC` subtabs, LRD collections card with `Week / Month / Term` subtabs, Principal action items card, interactive Greater Monrovia catchment zone breakdown, recent student watch table, audit ticker) and topbar `GlobalSearch` popover (`/` and `Cmd/Ctrl+K`).
+  - Directory search, campus, division, grade, section, status, and page are part of the pane address, so a refresh restores them.
+  - A right-click on a student, staff, or guardian row offers Open Inspector, Copy Record ID, and Log Quick Note.
+  - A linked child in the guardian inspector opens that student's inspector.
 - **Reviewer Checks:**
   - Dashboard renders 100% live database metrics (zero hardcoded fixture numbers) and reacts to the `LRD + USD` topbar toggle.
+  - A refresh keeps the directory filters and page, the row menu copies the record id, and a linked child opens that student.
   - Switching `Sem 1` / `P1–P6` / `WAEC` and `Week` / `Month` / `Term` subtabs updates charts cleanly.
   - Global Search respects RBAC (e.g., Teacher never sees Bursar receipt totals or other classes' students).
 
