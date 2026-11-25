@@ -57,6 +57,7 @@ export type AuthConfig = {
   data_controller_name: string
   csrf_token: string
   privacy_notice: PrivacyNotice
+  school_name?: string
 }
 
 export type BrowserSession = {
@@ -121,7 +122,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const method = options.method ?? 'GET'
   const unsafe = method !== 'GET' && method !== 'HEAD'
   const headers = new Headers()
-  if (options.body !== undefined) headers.set('Content-Type', 'application/json')
+  const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData
+  if (options.body !== undefined && !isForm) headers.set('Content-Type', 'application/json')
   if (options.auth !== false && accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
   if (options.csrf ?? unsafe) headers.set('X-CSRFToken', await loadCsrf())
   if (options.idempotencyKey) headers.set('Idempotency-Key', options.idempotencyKey)
@@ -132,7 +134,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       method,
       headers,
       credentials: 'include',
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body:
+        options.body === undefined
+          ? undefined
+          : isForm
+            ? (options.body as FormData)
+            : JSON.stringify(options.body),
     })
   } catch {
     throw new ApiError(0, 'network_error', 'The server could not be reached.', {})

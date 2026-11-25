@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import { Badge } from '../components/Badge.tsx'
 import { Button } from '../components/Button.tsx'
@@ -71,11 +72,21 @@ function todayIso() {
   return `${year}-${month}-${day}`
 }
 
+const CLASS_TAB_IDS = new Set(TABS.map((tab) => tab.id))
+
 export function ClassesScreen() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const role = user?.role ?? ''
   const canWrite = role === 'principal' || role === 'registrar'
-  const [tab, setTab] = useState('roster')
+  const rawTab = searchParams.get('tab') || 'roster'
+  const tab = CLASS_TAB_IDS.has(rawTab) ? rawTab : 'roster'
+  function setTab(id: string) {
+    const next = new URLSearchParams(searchParams)
+    if (id === 'roster') next.delete('tab')
+    else next.set('tab', id)
+    setSearchParams(next, { replace: true })
+  }
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
   const [classrooms, setClassrooms] = useState<ClassroomRecord[]>([])
@@ -91,6 +102,7 @@ export function ClassesScreen() {
   const [selectedClassroomId, setSelectedClassroomId] = useState('')
   const [selectedTeacherId, setSelectedTeacherId] = useState('')
   const [slots, setSlots] = useState<TimetableSlot[]>([])
+  const [slotsFailed, setSlotsFailed] = useState(false)
   const [slotEdit, setSlotEdit] = useState<{
     day: string
     period: number
@@ -99,6 +111,7 @@ export function ClassesScreen() {
   const [uncoveredDate, setUncoveredDate] = useState(todayIso())
   const [uncovered, setUncovered] = useState<UncoveredSlot[]>([])
   const [uncoveredCount, setUncoveredCount] = useState(0)
+  const [uncoveredFailed, setUncoveredFailed] = useState(false)
   const [absenceTeacherId, setAbsenceTeacherId] = useState('')
   const [absenceReason, setAbsenceReason] = useState('')
   const [subSlotId, setSubSlotId] = useState('')
@@ -139,11 +152,18 @@ export function ClassesScreen() {
         : { teacher: selectedTeacherId || undefined }
     if (!params.classroom && !params.teacher) {
       setSlots([])
+      setSlotsFailed(false)
       return
     }
     void fetchTimetable(params)
-      .then(setSlots)
-      .catch(() => setSlots([]))
+      .then((rows) => {
+        setSlots(rows)
+        setSlotsFailed(false)
+      })
+      .catch(() => {
+        setSlots([])
+        setSlotsFailed(true)
+      })
   }
 
   function loadUncovered(date = uncoveredDate) {
@@ -151,10 +171,12 @@ export function ClassesScreen() {
       .then((body) => {
         setUncovered(body.results)
         setUncoveredCount(body.count)
+        setUncoveredFailed(false)
       })
       .catch(() => {
         setUncovered([])
         setUncoveredCount(0)
+        setUncoveredFailed(true)
       })
   }
 
@@ -284,6 +306,9 @@ export function ClassesScreen() {
                 )}
               </div>
             </div>
+            {slotsFailed ? (
+              <ErrorState onRetry={loadSlots}>The timetable could not be loaded.</ErrorState>
+            ) : null}
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-xs">
                 <thead>
@@ -448,7 +473,9 @@ export function ClassesScreen() {
                   </Button>
                 </div>
               </div>
-              {uncovered.length === 0 ? (
+              {uncoveredFailed ? (
+                <ErrorState onRetry={() => loadUncovered()}>Uncovered slots could not be loaded.</ErrorState>
+              ) : uncovered.length === 0 ? (
                 <EmptyState>No uncovered slots for this date.</EmptyState>
               ) : (
                 <ul className="space-y-2 text-xs">
@@ -468,54 +495,62 @@ export function ClassesScreen() {
         </div>
       )}
 
-      <ClassroomInspector
-        open={Boolean(active)}
-        classroom={active}
-        subjects={subjects}
-        teachers={teachers}
-        canWrite={canWrite}
-        onClose={() => setActiveId(null)}
-        onSaved={(row) => {
-          setActive(row)
-          setClassrooms((prev) => prev.map((item) => (item.id === row.id ? row : item)))
-        }}
-        onOpenTimetable={() => {
-          if (!active) return
-          setSelectedClassroomId(active.id)
-          setViewMode('classroom')
-          setTab('timetable')
-          setActiveId(null)
-        }}
-      />
+      {active ? (
+        <ClassroomInspector
+          key={active.id}
+          open
+          classroom={active}
+          subjects={subjects}
+          teachers={teachers}
+          canWrite={canWrite}
+          onClose={() => setActiveId(null)}
+          onSaved={(row) => {
+            setActive(row)
+            setClassrooms((prev) => prev.map((item) => (item.id === row.id ? row : item)))
+          }}
+          onOpenTimetable={() => {
+            setSelectedClassroomId(active.id)
+            setViewMode('classroom')
+            setTab('timetable')
+            setActiveId(null)
+          }}
+        />
+      ) : null}
 
-      <NewClassModal
-        open={newOpen}
-        campuses={campuses}
-        years={years}
-        grades={grades}
-        teachers={teachers}
-        onClose={() => setNewOpen(false)}
-        onCreated={(row) => {
-          setClassrooms((prev) => [...prev, row].sort((a, b) => a.name.localeCompare(b.name)))
-          setNewOpen(false)
-          pushToast(`Created class ${row.name}.`, 'success')
-        }}
-      />
+      {newOpen ? (
+        <NewClassModal
+          key="new-class"
+          open
+          campuses={campuses}
+          years={years}
+          grades={grades}
+          teachers={teachers}
+          onClose={() => setNewOpen(false)}
+          onCreated={(row) => {
+            setClassrooms((prev) => [...prev, row].sort((a, b) => a.name.localeCompare(b.name)))
+            setNewOpen(false)
+            pushToast(`Created class ${row.name}.`, 'success')
+          }}
+        />
+      ) : null}
 
-      <SlotEditorModal
-        open={Boolean(slotEdit)}
-        day={slotEdit?.day ?? 'monday'}
-        period={slotEdit?.period ?? 1}
-        slot={slotEdit?.slot ?? null}
-        classroom={selectedClassroom}
-        teachers={teachers}
-        onClose={() => setSlotEdit(null)}
-        onSaved={() => {
-          setSlotEdit(null)
-          loadSlots()
-          loadUncovered()
-        }}
-      />
+      {slotEdit ? (
+        <SlotEditorModal
+          key={`${slotEdit.day}-${slotEdit.period}-${slotEdit.slot?.id ?? 'new'}`}
+          open
+          day={slotEdit.day}
+          period={slotEdit.period}
+          slot={slotEdit.slot}
+          classroom={selectedClassroom}
+          teachers={teachers}
+          onClose={() => setSlotEdit(null)}
+          onSaved={() => {
+            setSlotEdit(null)
+            loadSlots()
+            loadUncovered()
+          }}
+        />
+      ) : null}
     </div>
   )
 }
@@ -531,7 +566,7 @@ function ClassroomInspector({
   onOpenTimetable,
 }: {
   open: boolean
-  classroom: ClassroomRecord | null
+  classroom: ClassroomRecord
   subjects: SubjectRecord[]
   teachers: TeacherRef[]
   canWrite: boolean
@@ -539,30 +574,21 @@ function ClassroomInspector({
   onSaved: (row: ClassroomRecord) => void
   onOpenTimetable: () => void
 }) {
-  const [roomLabel, setRoomLabel] = useState('')
-  const [capacity, setCapacity] = useState('35')
-  const [homeroomId, setHomeroomId] = useState('')
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([])
-  const [teacherBySubject, setTeacherBySubject] = useState<Record<string, string>>({})
-  const [error, setError] = useState('')
-  const [subjectError, setSubjectError] = useState('')
-
-  useEffect(() => {
-    if (!classroom) return
-    setRoomLabel(classroom.room_label)
-    setCapacity(String(classroom.capacity))
-    setHomeroomId(classroom.homeroom_teacher?.id ?? '')
-    setSelectedSubjectIds(classroom.subjects.map((row) => row.subject.id))
+  const [roomLabel, setRoomLabel] = useState(classroom.room_label)
+  const [capacity, setCapacity] = useState(String(classroom.capacity))
+  const [homeroomId, setHomeroomId] = useState(classroom.homeroom_teacher?.id ?? '')
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState(
+    () => classroom.subjects.map((row) => row.subject.id),
+  )
+  const [teacherBySubject, setTeacherBySubject] = useState<Record<string, string>>(() => {
     const map: Record<string, string> = {}
     for (const row of classroom.subjects) {
       map[row.subject.id] = row.teacher?.id ?? ''
     }
-    setTeacherBySubject(map)
-    setError('')
-    setSubjectError('')
-  }, [classroom])
-
-  if (!classroom) return null
+    return map
+  })
+  const [error, setError] = useState('')
+  const [subjectError, setSubjectError] = useState('')
 
   return (
     <Drawer open={open} title={classroom.name} onClose={onClose}>
@@ -722,27 +748,15 @@ function NewClassModal({
   onCreated: (row: ClassroomRecord) => void
 }) {
   const currentYear = years.find((row) => row.is_current) ?? years[0]
-  const [campusId, setCampusId] = useState('')
-  const [yearId, setYearId] = useState('')
-  const [gradeId, setGradeId] = useState('')
+  const [campusId, setCampusId] = useState(campuses[0]?.id ?? '')
+  const [yearId, setYearId] = useState(currentYear?.id ?? '')
+  const [gradeId, setGradeId] = useState(grades[0]?.id ?? '')
   const [section, setSection] = useState('A')
   const [room, setRoom] = useState('')
   const [capacity, setCapacity] = useState('35')
   const [homeroomId, setHomeroomId] = useState('')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
-
-  useEffect(() => {
-    if (!open) return
-    setCampusId(campuses[0]?.id ?? '')
-    setYearId(currentYear?.id ?? '')
-    setGradeId(grades[0]?.id ?? '')
-    setSection('A')
-    setRoom('')
-    setCapacity('35')
-    setHomeroomId('')
-    setError('')
-  }, [open, campuses, currentYear, grades])
 
   const campus = campuses.find((row) => row.id === campusId)
   const gradeOptions = (campus?.grades_served.length ? campus.grades_served : grades).map((row) => ({
@@ -865,28 +879,23 @@ function SlotEditorModal({
   onClose: () => void
   onSaved: () => void
 }) {
-  const [subjectId, setSubjectId] = useState('')
-  const [teacherId, setTeacherId] = useState('')
-  const [roomLabel, setRoomLabel] = useState('')
+  const initialSubjectId = slot?.subject.id ?? classroom?.subjects[0]?.subject.id ?? ''
+  const initialAssignment = classroom?.subjects.find((row) => row.subject.id === initialSubjectId)
+  const [subjectId, setSubjectId] = useState(initialSubjectId)
+  const [teacherId, setTeacherId] = useState(
+    slot?.teacher?.id ?? initialAssignment?.teacher?.id ?? '',
+  )
+  const [roomLabel, setRoomLabel] = useState(slot?.room_label || classroom?.room_label || '')
   const [error, setError] = useState('')
   const [fieldError, setFieldError] = useState('')
   const [pending, setPending] = useState(false)
 
-  useEffect(() => {
-    if (!open || !classroom) return
-    const assignment = classroom.subjects.find((row) => row.subject.id === (slot?.subject.id ?? ''))
-    setSubjectId(slot?.subject.id ?? classroom.subjects[0]?.subject.id ?? '')
-    setTeacherId(slot?.teacher?.id ?? assignment?.teacher?.id ?? '')
-    setRoomLabel(slot?.room_label || classroom.room_label || '')
-    setError('')
-    setFieldError('')
-  }, [open, slot, classroom])
-
-  useEffect(() => {
-    if (!classroom || slot) return
-    const assignment = classroom.subjects.find((row) => row.subject.id === subjectId)
+  function chooseSubject(nextId: string) {
+    setSubjectId(nextId)
+    if (slot) return
+    const assignment = classroom?.subjects.find((row) => row.subject.id === nextId)
     if (assignment?.teacher?.id) setTeacherId(assignment.teacher.id)
-  }, [subjectId, classroom, slot])
+  }
 
   const subjectOptions = (classroom?.subjects ?? []).map((row) => ({
     value: row.subject.id,
@@ -972,7 +981,7 @@ function SlotEditorModal({
           <>
             <div className="space-y-1">
               <span className="font-medium text-body">Subject</span>
-              <Select ariaLabel="Subject" value={subjectId} options={subjectOptions} onChange={setSubjectId} />
+              <Select ariaLabel="Subject" value={subjectId} options={subjectOptions} onChange={chooseSubject} />
             </div>
             <div className="space-y-1">
               <span className="font-medium text-body">Teacher</span>

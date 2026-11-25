@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
 import { Badge } from '../components/Badge.tsx'
 import { Button } from '../components/Button.tsx'
@@ -50,13 +50,23 @@ const TABS = [
 
 const ACTIVE_CODES = new Set(['P1', 'P2', 'P3', 'P4', 'P5', 'P6'])
 
+const SETTINGS_TAB_IDS = new Set(TABS.map((tab) => tab.id))
+
 export function SettingsScreen() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const profile = useSchoolProfile()
   const role = user?.role ?? ''
   const principal = role === 'principal'
   const rules = role === 'principal' || role === 'bursar'
-  const [tab, setTab] = useState('school')
+  const rawTab = searchParams.get('tab') || 'school'
+  const tab = SETTINGS_TAB_IDS.has(rawTab) ? rawTab : 'school'
+  function setTab(id: string) {
+    const next = new URLSearchParams(searchParams)
+    if (id === 'school') next.delete('tab')
+    else next.set('tab', id)
+    setSearchParams(next, { replace: true })
+  }
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
   const [settings, setSettings] = useState<SchoolSettings | null>(null)

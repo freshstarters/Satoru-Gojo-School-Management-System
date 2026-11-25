@@ -6,10 +6,15 @@ import { SchoolProfileContext } from './school-profile.ts'
 const READERS = new Set(['principal', 'registrar', 'bursar'])
 
 export function SchoolProfileProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
-  const [schoolName, setSchoolName] = useState('')
+  const { user, config } = useAuth()
+  const [schoolName, setSchoolName] = useState(config?.school_name?.trim() ?? '')
   const [lrdPerUsd, setRate] = useState<number | null>(null)
   const role = user?.role ?? ''
+
+  useEffect(() => {
+    const fromConfig = config?.school_name?.trim()
+    if (fromConfig) setSchoolName(fromConfig)
+  }, [config?.school_name])
 
   useEffect(() => {
     if (!READERS.has(role)) return
@@ -23,7 +28,6 @@ export function SchoolProfileProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         if (cancelled) return
-        setSchoolName('')
         setRate(null)
       })
     return () => {
