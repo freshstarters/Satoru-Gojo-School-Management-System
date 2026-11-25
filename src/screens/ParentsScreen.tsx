@@ -59,9 +59,12 @@ export function ParentsScreen() {
     setSearchParams(next, { replace: true })
   }
 
+  function refreshList() {
+    setReady(false)
+  }
+
   useEffect(() => {
     let cancelled = false
-    setReady(false)
     ;(async () => {
       try {
         const data = await fetchParents({
@@ -103,10 +106,7 @@ export function ParentsScreen() {
   }, [canEdit, reloadKey])
 
   useEffect(() => {
-    if (!parentId) {
-      setActive(null)
-      return
-    }
+    if (!parentId) return
     let cancelled = false
     ;(async () => {
       try {
@@ -147,6 +147,7 @@ export function ParentsScreen() {
             type="search"
             value={q}
             onChange={(event) => {
+              refreshList()
               setPage(1)
               setQ(event.target.value)
             }}
@@ -162,7 +163,14 @@ export function ParentsScreen() {
       </div>
 
       {failed ? (
-        <ErrorState onRetry={() => setReloadKey((value) => value + 1)}>Could not load guardians.</ErrorState>
+        <ErrorState
+          onRetry={() => {
+            refreshList()
+            setReloadKey((value) => value + 1)
+          }}
+        >
+          Could not load guardians.
+        </ErrorState>
       ) : null}
 
       <Card className="overflow-hidden">
@@ -171,7 +179,7 @@ export function ParentsScreen() {
             <thead>
               <tr className="border-b crm-border text-[11px] font-semibold uppercase text-sub">
                 <th className="px-4 py-3">Guardian</th>
-                <th className="px-4 py-3">Zone</th>
+                <th className="px-4 py-3">Relationship &amp; Zone</th>
                 <th className="px-4 py-3">Phone (LR)</th>
                 <th className="px-4 py-3">Linked Children</th>
                 <th className="px-4 py-3">SMS Consent</th>
@@ -206,10 +214,14 @@ export function ParentsScreen() {
                     </td>
                     <td className="px-4 py-3 text-body">{row.residential_zone || '—'}</td>
                     <td className="px-4 py-3 text-body">{row.phone}</td>
-                    <td className="num-tabular px-4 py-3 text-main">{row.linked_children_count}</td>
+                    <td className="px-4 py-3 text-main">
+                      {row.children.length
+                        ? row.children.map((child) => child.student_name).join(', ')
+                        : '—'}
+                    </td>
                     <td className="px-4 py-3">
-                      <Badge tone={row.sms_consent ? 'success' : 'warn'}>
-                        {row.sms_consent ? 'Opted In' : 'Opted Out'}
+                      <Badge tone={row.sms_consent ? 'success' : 'neutral'}>
+                        {row.sms_consent ? 'SMS On' : 'Muted'}
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -239,7 +251,10 @@ export function ParentsScreen() {
               variant="secondary"
               className="px-2.5 py-1 text-[11px]"
               disabled={page <= 1}
-              onClick={() => setPage((value) => Math.max(1, value - 1))}
+              onClick={() => {
+                refreshList()
+                setPage((value) => Math.max(1, value - 1))
+              }}
             >
               Previous
             </Button>
@@ -247,7 +262,10 @@ export function ParentsScreen() {
               variant="secondary"
               className="px-2.5 py-1 text-[11px]"
               disabled={page >= pageCount}
-              onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
+              onClick={() => {
+                refreshList()
+                setPage((value) => Math.min(pageCount, value + 1))
+              }}
             >
               Next
             </Button>
@@ -261,13 +279,14 @@ export function ParentsScreen() {
           onClose={() => setAddOpen(false)}
           onCreated={() => {
             setAddOpen(false)
+            refreshList()
             setPage(1)
             setReloadKey((value) => value + 1)
           }}
         />
       ) : null}
 
-      {active ? (
+      {active && active.id === parentId ? (
         <ParentInspectorDrawer
           key={active.id}
           open={Boolean(parentId)}
@@ -277,7 +296,10 @@ export function ParentsScreen() {
           canEdit={canEdit}
           canSeeBalance={canSeeBalance}
           students={students}
-          onClose={() => navigate('/parents')}
+          onClose={() => {
+            setActive(null)
+            navigate('/parents')
+          }}
           onSaved={() => setReloadKey((value) => value + 1)}
         />
       ) : null}

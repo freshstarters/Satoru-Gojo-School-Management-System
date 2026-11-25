@@ -89,9 +89,12 @@ export function TeachersScreen() {
     }
   }, [])
 
+  function refreshList() {
+    setReady(false)
+  }
+
   useEffect(() => {
     let cancelled = false
-    setReady(false)
     ;(async () => {
       try {
         const data = await fetchTeachers({
@@ -119,10 +122,7 @@ export function TeachersScreen() {
   }, [q, campusId, divisionId, page, reloadKey])
 
   useEffect(() => {
-    if (!teacherId) {
-      setActive(null)
-      return
-    }
+    if (!teacherId) return
     let cancelled = false
     ;(async () => {
       try {
@@ -163,6 +163,7 @@ export function TeachersScreen() {
             type="search"
             value={q}
             onChange={(event) => {
+              refreshList()
               setPage(1)
               setQ(event.target.value)
             }}
@@ -174,6 +175,7 @@ export function TeachersScreen() {
               value={divisionId}
               ariaLabel="Division filter"
               onChange={(value) => {
+                refreshList()
                 setPage(1)
                 setDivisionId(value)
               }}
@@ -185,6 +187,7 @@ export function TeachersScreen() {
               value={campusId}
               ariaLabel="Campus filter"
               onChange={(value) => {
+                refreshList()
                 setPage(1)
                 setCampusId(value)
               }}
@@ -203,7 +206,14 @@ export function TeachersScreen() {
       </div>
 
       {failed ? (
-        <ErrorState onRetry={() => setReloadKey((value) => value + 1)}>Could not load staff.</ErrorState>
+        <ErrorState
+          onRetry={() => {
+            refreshList()
+            setReloadKey((value) => value + 1)
+          }}
+        >
+          Could not load staff.
+        </ErrorState>
       ) : null}
 
       <Card className="overflow-hidden">
@@ -250,7 +260,7 @@ export function TeachersScreen() {
                     <td className="px-4 py-3 text-body">
                       {row.homerooms.length ? row.homerooms.map((item) => item.name).join(', ') : '—'}
                     </td>
-                    <td className="px-4 py-3 text-body">{row.phone}</td>
+                    <td className="px-4 py-3 text-body">{row.phone || '—'}</td>
                     <td className="px-4 py-3">
                       <Badge tone={portalTone(row.portal_status)}>{portalLabel(row.portal_status)}</Badge>
                     </td>
@@ -281,7 +291,10 @@ export function TeachersScreen() {
               variant="secondary"
               className="px-2.5 py-1 text-[11px]"
               disabled={page <= 1}
-              onClick={() => setPage((value) => Math.max(1, value - 1))}
+              onClick={() => {
+                refreshList()
+                setPage((value) => Math.max(1, value - 1))
+              }}
             >
               Previous
             </Button>
@@ -289,7 +302,10 @@ export function TeachersScreen() {
               variant="secondary"
               className="px-2.5 py-1 text-[11px]"
               disabled={page >= pageCount}
-              onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
+              onClick={() => {
+                refreshList()
+                setPage((value) => Math.min(pageCount, value + 1))
+              }}
             >
               Next
             </Button>
@@ -305,13 +321,14 @@ export function TeachersScreen() {
           onClose={() => setAddOpen(false)}
           onCreated={() => {
             setAddOpen(false)
+            refreshList()
             setPage(1)
             setReloadKey((value) => value + 1)
           }}
         />
       ) : null}
 
-      {active ? (
+      {active && active.id === teacherId ? (
         <TeacherInspectorDrawer
           key={active.id}
           open={Boolean(teacherId)}
@@ -321,7 +338,10 @@ export function TeachersScreen() {
           canEdit={canEdit}
           campuses={campuses}
           divisions={divisions}
-          onClose={() => navigate('/teachers')}
+          onClose={() => {
+            setActive(null)
+            navigate('/teachers')
+          }}
           onSaved={() => setReloadKey((value) => value + 1)}
         />
       ) : null}

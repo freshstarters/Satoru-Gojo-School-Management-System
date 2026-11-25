@@ -7,6 +7,12 @@ export type StudentSummary = {
   honor_roll: number
 }
 
+export type PrimaryGuardian = {
+  id: string
+  full_name: string
+  phone: string
+}
+
 export type StudentRecord = {
   id: string
   student_code: string
@@ -27,7 +33,7 @@ export type StudentRecord = {
   gender_label: string
   catchment_zone: string
   photo_url: string | null
-  primary_guardian: string | null
+  primary_guardian: PrimaryGuardian | null
   attendance_pct: number | null
   yearly_avg_pct: number | null
   exam_clearance: string | null
@@ -94,6 +100,7 @@ export type EnrollInput = {
   gender: string
   catchment_zone?: string
   photo?: File | null
+  primary_guardian_id?: string
 }
 
 function query(filters: StudentFilters) {
@@ -127,6 +134,7 @@ export function enrollStudent(input: EnrollInput) {
     body.set('date_of_birth', input.date_of_birth)
     body.set('gender', input.gender)
     if (input.catchment_zone) body.set('catchment_zone', input.catchment_zone)
+    if (input.primary_guardian_id) body.set('primary_guardian_id', input.primary_guardian_id)
     body.set('photo', input.photo)
     return apiRequest<StudentRecord>('/students/', {
       method: 'POST',
@@ -143,6 +151,9 @@ export function enrollStudent(input: EnrollInput) {
       date_of_birth: input.date_of_birth,
       gender: input.gender,
       catchment_zone: input.catchment_zone ?? '',
+      ...(input.primary_guardian_id
+        ? { primary_guardian_id: input.primary_guardian_id }
+        : {}),
     },
     idempotencyKey: crypto.randomUUID(),
   })

@@ -12,6 +12,7 @@ import { Select } from '../components/Select.tsx'
 import { Subtabs } from '../components/Subtabs.tsx'
 import { pushToast } from '../hooks/useToasts.ts'
 import { fieldText, isApiError } from '../service/apiClient.ts'
+import { fetchParents, type GuardianRecord } from '../service/parents.ts'
 import {
   fetchClassrooms,
   type ClassroomRecord,
@@ -61,6 +62,23 @@ const STATUS_OPTIONS = [
 function dash(value: string | number | null | undefined) {
   if (value == null || value === '') return '—'
   return String(value)
+}
+
+function guardianOptions(
+  guardians: GuardianRecord[],
+  current: StudentRecord['primary_guardian'],
+) {
+  const options = guardians.map((row) => ({
+    value: row.id,
+    label: `${row.full_name} (${row.phone})`,
+  }))
+  if (current && !options.some((row) => row.value === current.id)) {
+    options.unshift({
+      value: current.id,
+      label: `${current.full_name} (${current.phone})`,
+    })
+  }
+  return [{ value: '', label: 'No primary guardian' }, ...options]
 }
 
 function statusTone(status: string) {
@@ -161,9 +179,12 @@ export function StudentsScreen() {
     }
   }, [])
 
+  function refreshList() {
+    setReady(false)
+  }
+
   useEffect(() => {
     let cancelled = false
-    setReady(false)
     ;(async () => {
       try {
         const data = await fetchStudents({
@@ -195,10 +216,7 @@ export function StudentsScreen() {
   }, [q, campusId, divisionId, gradeId, classroomId, status, page, reloadKey])
 
   useEffect(() => {
-    if (!studentId) {
-      setActive(null)
-      return
-    }
+    if (!studentId) return
     let cancelled = false
     ;(async () => {
       try {
@@ -222,6 +240,7 @@ export function StudentsScreen() {
   }
 
   function closeInspector() {
+    setActive(null)
     navigate('/students')
   }
 
@@ -255,6 +274,7 @@ export function StudentsScreen() {
             type="search"
             value={q}
             onChange={(event) => {
+              refreshList()
               setPage(1)
               setQ(event.target.value)
             }}
@@ -266,6 +286,7 @@ export function StudentsScreen() {
               value={campusId}
               ariaLabel="Campus filter"
               onChange={(value) => {
+                refreshList()
                 setPage(1)
                 setCampusId(value)
               }}
@@ -277,6 +298,7 @@ export function StudentsScreen() {
               value={divisionId}
               ariaLabel="Division filter"
               onChange={(value) => {
+                refreshList()
                 setPage(1)
                 setDivisionId(value)
                 setGradeId('')
@@ -289,6 +311,7 @@ export function StudentsScreen() {
               value={gradeId}
               ariaLabel="Grade filter"
               onChange={(value) => {
+                refreshList()
                 setPage(1)
                 setGradeId(value)
               }}
@@ -300,6 +323,7 @@ export function StudentsScreen() {
               value={classroomId}
               ariaLabel="Section filter"
               onChange={(value) => {
+                refreshList()
                 setPage(1)
                 setClassroomId(value)
               }}
@@ -311,6 +335,7 @@ export function StudentsScreen() {
               value={status}
               ariaLabel="Status filter"
               onChange={(value) => {
+                refreshList()
                 setPage(1)
                 setStatus(value)
               }}
@@ -321,21 +346,26 @@ export function StudentsScreen() {
       </div>
 
       {failed ? (
-        <ErrorState onRetry={() => setReloadKey((value) => value + 1)}>Could not load students.</ErrorState>
+        <ErrorState
+          onRetry={() => {
+            refreshList()
+            setReloadKey((value) => value + 1)
+          }}
+        >
+          Could not load students.
+        </ErrorState>
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {[
-          ['Visible Students', summary?.total],
-          ['At Risk', summary?.at_risk],
-          ['WAEC Candidates', summary?.waec_candidates],
-          ['Honor Roll', summary?.honor_roll],
+          ['Visible Students', ready ? dash(summary?.total) : '—'],
+          ['Honor Roll (≥85%)', '—'],
+          ['At Risk (<70%)', '—'],
+          ['Exam Cleared', ready ? `— / ${dash(summary?.total)}` : '—'],
         ].map(([label, value]) => (
-          <Card key={String(label)} className="p-4">
+          <Card key={label} className="p-4">
             <div className="text-xs text-sub">{label}</div>
-            <div className="num-tabular mt-1 text-xl font-bold text-main">
-              {ready ? dash(value as number | undefined) : '—'}
-            </div>
+            <div className="num-tabular mt-1 text-xl font-bold text-main">{value}</div>
           </Card>
         ))}
       </div>
@@ -382,7 +412,12 @@ export function StudentsScreen() {
                       <div className="font-medium text-main">{dash(row.classroom_name || row.grade)}</div>
                       <div className="text-[11px] text-sub">{dash(row.division)}</div>
                     </td>
-                    <td className="px-4 py-3 text-body">{dash(row.primary_guardian)}</td>
+                    <td className="px-4 py-3">
+                      <div className="text-body">{row.primary_guardian?.full_name ?? '—'}</div>
+                      {row.primary_guardian?.phone ? (
+                        <div className="text-[11px] text-sub">{row.primary_guardian.phone}</div>
+                      ) : null}
+                    </td>
                     <td className="num-tabular px-4 py-3 text-main">
                       {row.attendance_pct == null ? '—' : `${row.attendance_pct}%`}
                     </td>
@@ -423,7 +458,10 @@ export function StudentsScreen() {
               variant="secondary"
               className="px-2.5 py-1 text-[11px]"
               disabled={page <= 1}
-              onClick={() => setPage((value) => Math.max(1, value - 1))}
+              onClick={() => {
+                refreshList()
+                setPage((value) => Math.max(1, value - 1))
+              }}
             >
               Previous
             </Button>
@@ -431,7 +469,10 @@ export function StudentsScreen() {
               variant="secondary"
               className="px-2.5 py-1 text-[11px]"
               disabled={page >= pageCount}
-              onClick={() => setPage((value) => Math.min(pageCount, value + 1))}
+              onClick={() => {
+                refreshList()
+                setPage((value) => Math.min(pageCount, value + 1))
+              }}
             >
               Next
             </Button>
@@ -448,13 +489,14 @@ export function StudentsScreen() {
           onClose={() => setEnrollOpen(false)}
           onCreated={() => {
             setEnrollOpen(false)
+            refreshList()
             setPage(1)
             setReloadKey((value) => value + 1)
           }}
         />
       ) : null}
 
-      {active ? (
+      {active && active.id === studentId ? (
         <StudentInspectorDrawer
           key={active.id}
           open={Boolean(studentId)}
@@ -465,7 +507,10 @@ export function StudentsScreen() {
           campuses={campuses}
           classrooms={classrooms}
           onClose={closeInspector}
-          onSaved={() => setReloadKey((value) => value + 1)}
+          onSaved={() => {
+            refreshList()
+            setReloadKey((value) => value + 1)
+          }}
         />
       ) : null}
     </section>
@@ -492,12 +537,29 @@ function EnrollModal({
   const [gender, setGender] = useState('female')
   const [catchment, setCatchment] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
+  const [guardianId, setGuardianId] = useState('')
+  const [guardians, setGuardians] = useState<GuardianRecord[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
   const classroomChoices = classrooms
     .filter((row) => !campusId || row.campus_id === campusId)
     .map((row) => ({ value: row.id, label: `${row.name} · ${row.campus_name}` }))
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchParents({ page: 1, page_size: 100 }).then(
+      (body) => {
+        if (!cancelled) setGuardians(body.results)
+      },
+      () => {
+        if (!cancelled) setGuardians([])
+      },
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function submit() {
     setBusy(true)
@@ -511,6 +573,7 @@ function EnrollModal({
         gender,
         catchment_zone: catchment.trim(),
         photo,
+        primary_guardian_id: guardianId || undefined,
       })
       pushToast(`Enrolled ${created.full_name} as ${created.student_code}.`, 'success')
       onCreated()
@@ -519,6 +582,7 @@ function EnrollModal({
         fieldText(err, 'full_name') ||
           fieldText(err, 'classroom_id') ||
           fieldText(err, 'date_of_birth') ||
+          fieldText(err, 'primary_guardian_id') ||
           (isApiError(err) ? err.detail : 'Could not enroll student.'),
       )
     } finally {
@@ -594,6 +658,21 @@ function EnrollModal({
           </div>
         </div>
         <div>
+          <label className="mb-1 block font-medium text-body">Primary Guardian</label>
+          <Select
+            ariaLabel="Primary guardian"
+            value={guardianId}
+            onChange={setGuardianId}
+            options={[
+              { value: '', label: 'No primary guardian' },
+              ...guardians.map((row) => ({
+                value: row.id,
+                label: `${row.full_name} (${row.phone})`,
+              })),
+            ]}
+          />
+        </div>
+        <div>
           <label className="mb-1 block font-medium text-body">Photo (optional)</label>
           <input
             type="file"
@@ -648,6 +727,8 @@ function StudentInspectorDrawer({
   const [gender, setGender] = useState(student.gender)
   const [catchment, setCatchment] = useState(student.catchment_zone)
   const [photo, setPhoto] = useState<File | null>(null)
+  const [guardianId, setGuardianId] = useState(student.primary_guardian?.id ?? '')
+  const [guardians, setGuardians] = useState<GuardianRecord[]>([])
   const [welfare, setWelfare] = useState<WelfareRecord | null>(null)
   const [pickups, setPickups] = useState<PickupRecord[]>([])
   const [notes, setNotes] = useState<ConductRecord[]>([])
@@ -667,6 +748,21 @@ function StudentInspectorDrawer({
   }, [student])
 
   const showWaec = gradeNumber === 9 || gradeNumber === 12
+
+  useEffect(() => {
+    let cancelled = false
+    void fetchParents({ page: 1, page_size: 100 }).then(
+      (body) => {
+        if (!cancelled) setGuardians(body.results)
+      },
+      () => {
+        if (!cancelled) setGuardians([])
+      },
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -707,6 +803,7 @@ function StudentInspectorDrawer({
         gender,
         catchment_zone: catchment.trim(),
         photo,
+        primary_guardian_id: guardianId,
       })
       setPhoto(null)
       pushToast('Student profile saved.', 'success')
@@ -933,7 +1030,16 @@ function StudentInspectorDrawer({
                 <span className="font-medium text-body">WAEC candidate</span>
               </label>
             ) : null}
-            <p className="text-[11px] text-sub">Primary guardian linking arrives with the Parents directory.</p>
+            <div>
+              <label className="mb-1 block font-medium text-body">Primary Guardian</label>
+              <Select
+                ariaLabel="Primary guardian"
+                value={guardianId}
+                disabled={!canEditProfile}
+                onChange={setGuardianId}
+                options={guardianOptions(guardians, student.primary_guardian)}
+              />
+            </div>
             {canEditProfile ? (
               <div className="flex gap-2 pt-1">
                 <Button className="px-3 py-1.5 text-xs" onClick={saveProfile}>
